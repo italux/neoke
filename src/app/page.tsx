@@ -1,5 +1,5 @@
-import { Karaoke } from "@/components/karaoke";
+import { EnterCode } from "@/components/enter-code";
 
 export default function Page() {
-  return <Karaoke />
+  return <EnterCode />
 }
