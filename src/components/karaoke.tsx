@@ -45,7 +45,7 @@ export function Karaoke({ code }: { code: string }) {
   const [newNameError, setNewNameError] = useState("");
   const [newVideoUrlError, setNewVideoUrlError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   // Verify that the session code exists
   useEffect(() => {
@@ -229,7 +229,6 @@ export function Karaoke({ code }: { code: string }) {
   }
 
   if (error) {
-    setError(error);
     return <div className="text-red-500 text-center">{error}</div>;
   }
 
