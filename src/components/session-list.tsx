@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, SVGProps } from "react";
+import { useEffect, useState, SVGProps, MouseEventHandler, useCallback } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,9 +54,9 @@ export function SessionList() {
     fetchSessions();
   }, []);
 
-  const handleGenerateNewCode = () => {
+  const handleGenerateNewCode = useCallback(() => {
     router.push("/generate"); // Navigate to the generate code page
-  };
+  }, [router]);
 
   if (loading) {
     return (
@@ -108,7 +108,7 @@ export function SessionList() {
             </ul>
           )}
           <div className="text-center mt-4 flex-grow">
-            <Button className="flex-grow" onClick={handleGenerateNewCode}>
+            <Button className="flex-grow" onClick={handleGenerateNewCode as unknown as MouseEventHandler<HTMLButtonElement>}>
               Create a new session code
             </Button>
           </div>
