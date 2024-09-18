@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { JSX, SVGProps, useEffect, useState } from "react";
-
 import { db } from "@/firebase/firebaseConfig";
 import {
   addDoc,
@@ -24,11 +23,11 @@ import {
 const youtubeUrlRegex =
   /^(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|shorts\/)?([a-zA-Z0-9_-]{11})(?:\S+)?$/;
 
-  interface Video {
-    name: string;
-    song: string;
-    videoUrl: string;
-  }
+interface Video {
+  name: string;
+  song: string;
+  videoUrl: string;
+}
 
 export function Karaoke({ code }: { code: string }) {
   const router = useRouter();
@@ -38,7 +37,6 @@ export function Karaoke({ code }: { code: string }) {
       id: string;
     }>
   >([]);
-  // const [currentVideo, setCurrentVideo] = useState<null | Document>(null);
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
   const [editingIndex, setEditingIndex] = useState(null);
   const [newName, setNewName] = useState("");
@@ -46,6 +44,8 @@ export function Karaoke({ code }: { code: string }) {
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [newNameError, setNewNameError] = useState("");
   const [newVideoUrlError, setNewVideoUrlError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Verify that the session code exists
   useEffect(() => {
@@ -85,6 +85,7 @@ export function Karaoke({ code }: { code: string }) {
         }));
         console.log("Received queue data:", queueData);
         setQueue(queueData);
+        setLoading(false);
       },
       (error) => {
         console.error("Error fetching queue data:", error);
@@ -219,8 +220,21 @@ export function Karaoke({ code }: { code: string }) {
     return match ? match[1] : null;
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading session...
+      </div>
+    );
+  }
+
+  if (error) {
+    setError(error);
+    return <div className="text-red-500 text-center">{error}</div>;
+  }
+
   return (
-    <div className="grid grid-cols-1 h-screen w-full bg-background text-foreground md:grid-cols-[500px_1fr]">
+    <div className="relative grid grid-cols-1 h-screen w-full bg-background text-foreground md:grid-cols-[500px_1fr]">
       <div className="border-b md:border-r p-6 space-y-4 overflow-auto">
         <h2 className="text-2xl font-bold">Karaoke Queue</h2>
         <div className="space-y-2">
@@ -391,6 +405,14 @@ export function Karaoke({ code }: { code: string }) {
           </div>
         )}
       </div>
+
+      {/* Floating button for Speed Dial */}
+      <Button
+        className="fixed bottom-5 left-5 rounded-lg p-4 bg-primary text-primary-foreground shadow-lg hover:bg-primary-hover"
+        onClick={() => router.push("/")}
+      >
+        <ArrowLeftIcon className="w-6 h-6" />
+      </Button>
     </div>
   );
 }
@@ -413,6 +435,28 @@ function ArrowRightIcon(
     >
       <path d="M5 12h14" />
       <path d="m12 5 7 7-7 7" />
+    </svg>
+  );
+}
+
+function ArrowLeftIcon(
+  props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>
+) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M19 12H5" />
+      <path d="m12 19-7-7 7-7" />
     </svg>
   );
 }
@@ -488,7 +532,7 @@ function TrashIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2}
-        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6"
+        d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6"
       />
     </svg>
   );
