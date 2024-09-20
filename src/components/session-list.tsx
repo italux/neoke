@@ -1,12 +1,25 @@
 "use client";
 
-import { useEffect, useState, SVGProps, MouseEventHandler, useCallback } from "react";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/firebase/firebaseConfig";
+import {
+  collection,
+  getDocs,
+  orderBy,
+  query,
+  Timestamp,
+  where,
+} from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import {
+  MouseEventHandler,
+  SVGProps,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 export function SessionList() {
   const [sessions, setSessions] = useState<
@@ -21,7 +34,12 @@ export function SessionList() {
     async function fetchSessions() {
       try {
         const sessionsCollection = collection(db, "sessions");
-        const sessionsQuery = query(sessionsCollection, orderBy("createdAt"));
+        const now = Timestamp.now();
+        const sessionsQuery = query(
+          sessionsCollection,
+          where("expiresAt", ">", now),
+          orderBy("createdAt")
+        );
         const sessionSnapshot = await getDocs(sessionsQuery);
 
         // Fetch queue counts for each session
@@ -108,7 +126,12 @@ export function SessionList() {
             </ul>
           )}
           <div className="text-center mt-4 flex-grow">
-            <Button className="flex-grow" onClick={handleGenerateNewCode as unknown as MouseEventHandler<HTMLButtonElement>}>
+            <Button
+              className="flex-grow"
+              onClick={
+                handleGenerateNewCode as unknown as MouseEventHandler<HTMLButtonElement>
+              }
+            >
               Create a new session code
             </Button>
           </div>

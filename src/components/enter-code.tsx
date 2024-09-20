@@ -1,19 +1,21 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
 import { db } from "@/firebase/firebaseConfig";
 import {
+  Timestamp,
   collection,
-  getDocs,
-  query,
   doc,
   getDoc,
+  getDocs,
+  query,
+  where,
 } from "firebase/firestore";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 export function EnterCode() {
   const router = useRouter();
@@ -27,12 +29,15 @@ export function EnterCode() {
     async function fetchSessionCount() {
       try {
         const sessionsCollection = collection(db, "sessions");
+        const now = Timestamp.now();
         const sessionsQuery = query(
-          sessionsCollection
+          sessionsCollection,
+          where("expiresAt", ">", now)
         );
         const sessionsSnapshot = await getDocs(sessionsQuery);
         setSessionCount(sessionsSnapshot.size);
-        setSessionAlert(true);
+        setSessionAlert(true); // Set the alert to show after fetching data
+        // setTimeout(() => setSessionAlert(false), 5000);
       } catch (error) {
         console.error("Error fetching sessions count:", error);
         setSessionCount(null);
