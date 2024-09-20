@@ -9,8 +9,6 @@ import {
   collection,
   getDocs,
   query,
-  where,
-  Timestamp,
   doc,
   getDoc,
 } from "firebase/firestore";
@@ -29,15 +27,12 @@ export function EnterCode() {
     async function fetchSessionCount() {
       try {
         const sessionsCollection = collection(db, "sessions");
-        const now = Timestamp.now();
         const sessionsQuery = query(
-          sessionsCollection,
-          where("expiresAt", ">", now)
+          sessionsCollection
         );
         const sessionsSnapshot = await getDocs(sessionsQuery);
         setSessionCount(sessionsSnapshot.size);
-        setSessionAlert(true); // Set the alert to show after fetching data
-        // setTimeout(() => setSessionAlert(false), 5000);
+        setSessionAlert(true);
       } catch (error) {
         console.error("Error fetching sessions count:", error);
         setSessionCount(null);
