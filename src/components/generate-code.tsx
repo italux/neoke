@@ -1,7 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation"; // Import useRouter
-import { SVGProps } from "react"; // Import SVGProps
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +11,9 @@ import {
   setDoc,
   Timestamp,
 } from "firebase/firestore";
-import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // Import useRouter
+import { SVGProps, useState } from "react"; // Import SVGProps
 
 export function GenerateCode() {
   const router = useRouter(); // Initialize router
