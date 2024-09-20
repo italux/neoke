@@ -60,7 +60,7 @@ export function Karaoke({ code }: { code: string }) {
   const fetchYouTubeResults = async (query: string) => {
     if (!query || !YOUTUBE_API_KEY) return;
 
-    const queryPrefix = "Karaoke +"
+    const queryPrefix = "Karaoke +";
 
     try {
       const response = await axios.get(
@@ -311,7 +311,7 @@ export function Karaoke({ code }: { code: string }) {
                         onChange={(e) =>
                           handleEditChange(index, "name", e.target.value)
                         }
-                        placeholder="Enter Name"
+                        placeholder="Your Name for Queue"
                         required
                       />
                       <Input
@@ -319,14 +319,14 @@ export function Karaoke({ code }: { code: string }) {
                         onChange={(e) =>
                           handleEditChange(index, "song", e.target.value)
                         }
-                        placeholder="Enter Song"
+                        placeholder="Song or Artist Name"
                       />
                       <Input
                         value={item.videoUrl}
                         onChange={(e) =>
                           handleEditChange(index, "videoUrl", e.target.value)
                         }
-                        placeholder="Enter Video URL"
+                        placeholder="Youtube Video URL"
                       />
                     </div>
                     <Button
@@ -399,7 +399,7 @@ export function Karaoke({ code }: { code: string }) {
                 <Input
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Enter Name"
+                  placeholder="Your Name for Queue"
                   required
                 />
                 {newNameError && (
@@ -409,12 +409,12 @@ export function Karaoke({ code }: { code: string }) {
                   value={newSong}
                   // onChange={(e) => setNewSong(e.target.value)}
                   onChange={handleSongInputChange}
-                  placeholder="Enter Song"
+                  placeholder="Song or Artist Name"
                 />
                 <Input
                   value={newVideoUrl}
                   onChange={(e) => setNewVideoUrl(e.target.value)}
-                  placeholder="Enter Video URL"
+                  placeholder="Youtube Video URL"
                 />
                 {newVideoUrlError && (
                   <div className="text-red-500 text-sm">{newVideoUrlError}</div>
