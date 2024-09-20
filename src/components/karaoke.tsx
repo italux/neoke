@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { db } from "@/firebase/firebaseConfig";
+import axios from "axios"; // For API requests
 import {
   addDoc,
   collection,
@@ -29,6 +30,11 @@ interface Video {
   videoUrl: string;
 }
 
+interface SearchResult {
+  song: string;
+  videoUrl: string;
+}
+
 export function Karaoke({ code }: { code: string }) {
   const router = useRouter();
   const [queue, setQueue] = useState<
@@ -46,6 +52,38 @@ export function Karaoke({ code }: { code: string }) {
   const [newVideoUrlError, setNewVideoUrlError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+
+  const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+
+  // Fetch YouTube search results
+  const fetchYouTubeResults = async (query: string) => {
+    if (!query || !YOUTUBE_API_KEY) return;
+
+    const queryPrefix = "Karaoke +"
+
+    try {
+      const response = await axios.get(
+        `https://www.googleapis.com/youtube/v3/search`,
+        {
+          params: {
+            part: "snippet",
+            q: queryPrefix + query,
+            type: "video",
+            maxResults: 3,
+            key: YOUTUBE_API_KEY,
+          },
+        }
+      );
+      const results = response.data.items.map((item: any) => ({
+        videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+        song: item.snippet.title,
+      }));
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Error fetching YouTube results:", error);
+    }
+  };
 
   // Verify that the session code exists
   useEffect(() => {
@@ -220,6 +258,20 @@ export function Karaoke({ code }: { code: string }) {
     return match ? match[1] : null;
   };
 
+  // Handle song input change and fetch YouTube search results
+  const handleSongInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const song = e.target.value;
+    setNewSong(song);
+    fetchYouTubeResults(song);
+  };
+
+  // Handle YouTube result selection
+  const handleSelectResult = (result: { song: string; videoUrl: string }) => {
+    setNewSong(result.song);
+    setNewVideoUrl(result.videoUrl);
+    setSearchResults([]);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -355,7 +407,8 @@ export function Karaoke({ code }: { code: string }) {
                 )}
                 <Input
                   value={newSong}
-                  onChange={(e) => setNewSong(e.target.value)}
+                  // onChange={(e) => setNewSong(e.target.value)}
+                  onChange={handleSongInputChange}
                   placeholder="Enter Song"
                 />
                 <Input
@@ -365,6 +418,20 @@ export function Karaoke({ code }: { code: string }) {
                 />
                 {newVideoUrlError && (
                   <div className="text-red-500 text-sm">{newVideoUrlError}</div>
+                )}
+                {/* Display YouTube search results */}
+                {searchResults.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {searchResults.map((result, index) => (
+                      <div
+                        key={index}
+                        className="bg-gray-200 p-2 rounded cursor-pointer hover:bg-gray-300"
+                        onClick={() => handleSelectResult(result)}
+                      >
+                        {result.song}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
