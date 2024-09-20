@@ -1,21 +1,21 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
 import { db } from "@/firebase/firebaseConfig";
 import {
+  Timestamp,
   collection,
+  doc,
+  getDoc,
   getDocs,
   query,
   where,
-  Timestamp,
-  doc,
-  getDoc,
 } from "firebase/firestore";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 export function EnterCode() {
   const router = useRouter();

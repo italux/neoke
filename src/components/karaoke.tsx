@@ -3,8 +3,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
-import { JSX, SVGProps, useEffect, useState } from "react";
 import { db } from "@/firebase/firebaseConfig";
 import {
   addDoc,
@@ -19,6 +17,8 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
+import { useRouter } from "next/navigation";
+import { JSX, SVGProps, useEffect, useState } from "react";
 
 const youtubeUrlRegex =
   /^(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|shorts\/)?([a-zA-Z0-9_-]{11})(?:\S+)?$/;
@@ -416,9 +416,7 @@ export function Karaoke({ code }: { code: string }) {
   );
 }
 
-function HomeIcon(
-  props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>
-) {
+function HomeIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
