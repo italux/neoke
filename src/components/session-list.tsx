@@ -38,7 +38,7 @@ export function SessionList() {
         const sessionsQuery = query(
           sessionsCollection,
           where("expiresAt", ">", now),
-          orderBy("createdAt")
+          orderBy("createdAt", "desc")
         );
         const sessionSnapshot = await getDocs(sessionsQuery);
 
