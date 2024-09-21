@@ -1,10 +1,9 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { db } from "@/firebase/firebaseConfig";
-import axios from "axios"; // For API requests
+import axios from "axios";
 import {
   addDoc,
   collection,
@@ -299,12 +298,6 @@ export function Karaoke({ code }: { code: string }) {
                 {editingIndex === index ? (
                   // Render editable inputs
                   <div className="flex items-center gap-3 w-full">
-                    <Avatar className="w-8 h-8 border">
-                      <AvatarImage src="" alt={`@${item.name}`} />
-                      <AvatarFallback>
-                        {item.name ? item.name.slice(0, 2) : "N/A"}
-                      </AvatarFallback>
-                    </Avatar>
                     <div className="grid gap-4 w-full">
                       <Input
                         value={item.name}
@@ -348,12 +341,6 @@ export function Karaoke({ code }: { code: string }) {
                   // Render item as usual
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8 border">
-                        <AvatarImage src="" alt={`@${item.name}`} />
-                        <AvatarFallback>
-                          {item.name ? item.name.slice(0, 2) : "N/A"}
-                        </AvatarFallback>
-                      </Avatar>
                       <div>
                         <div className="font-medium">{item.name}</div>
                         <div className="text-sm text-muted-foreground">
@@ -390,11 +377,8 @@ export function Karaoke({ code }: { code: string }) {
               </div>
             ) : null
           )}
-          <div className="flex items-center justify-between bg-muted p-3 rounded-md">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-8 h-8 border">
-                <AvatarFallback>N/A</AvatarFallback>
-              </Avatar>
+          <div className="flex items-center justify-start bg-muted p-3 rounded-md">
+            <div className="flex items-center gap-3 w-full">
               <div className="grid gap-2 w-full">
                 <Input
                   value={newName}
@@ -407,19 +391,17 @@ export function Karaoke({ code }: { code: string }) {
                 )}
                 <Input
                   value={newSong}
-                  // onChange={(e) => setNewSong(e.target.value)}
                   onChange={handleSongInputChange}
-                  placeholder="Song or Artist Name"
+                  placeholder="Type Song or Artist Name"
                 />
                 <Input
                   value={newVideoUrl}
                   onChange={(e) => setNewVideoUrl(e.target.value)}
-                  placeholder="Youtube Video URL"
+                  placeholder="Insert Youtube Video URL"
                 />
                 {newVideoUrlError && (
                   <div className="text-red-500 text-sm">{newVideoUrlError}</div>
                 )}
-                {/* Display YouTube search results */}
                 {searchResults.length > 0 && (
                   <div className="mt-2 space-y-2">
                     {searchResults.map((result, index) => (
@@ -441,10 +423,11 @@ export function Karaoke({ code }: { code: string }) {
           </div>
         </div>
       </div>
-      <div className="flex flex-col items-center justify-center p-6 space-y-4">
+      <div className="border-b md:border-r p-6 space-y-4 overflow-auto">
         {currentVideo ? (
           <>
-            <div className="aspect-video w-full rounded-lg overflow-hidden">
+          <h2 className="text-2xl font-bold hidden md:block text-center">Now Singing</h2>
+            <div className="aspect-video w-full rounded-lg overflow-hidden hidden md:block">
               <iframe
                 src={`https://www.youtube.com/embed/${extractVideoId(
                   currentVideo.videoUrl
@@ -460,15 +443,14 @@ export function Karaoke({ code }: { code: string }) {
               <div className="text-2xl md:text-3xl font-bold">
                 {currentVideo.name}
               </div>
-              <div className="text-sm md:text-lg text-muted-foreground">
-                Singing {currentVideo.song}
+              <div className="text-lg md:text-lg text-muted-foreground">
+                {currentVideo.song}
               </div>
+              <div className="text-lg p-2 text-muted-foreground font-semibold">Now Singing</div>
             </div>
           </>
         ) : (
-          <div className="text-center text-muted-foreground">
-            No video currently playing
-          </div>
+          <div>No video currently playing</div>
         )}
       </div>
 
