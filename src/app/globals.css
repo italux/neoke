@@ -67,3 +67,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media (max-width: 768px) {
+  .video-iframe {
+    display: none;
+    aspect-ratio: none;
+  }
+}

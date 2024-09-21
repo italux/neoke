@@ -121,7 +121,7 @@ export function EnterCode() {
       {sessionAlert && sessionCount !== null && (
         <div className="w-full max-w-lg absolute top-0 p-4">
           <Link href="/sessions" passHref>
-            <div className="w-full absolute top-0 p-4 cursor-pointer">
+            <div className="w-full top-0 p-4 cursor-pointer">
               <Alert
                 variant="default"
                 className="bg-primary text-primary-foreground transition-colors duration-200 cursor-pointer"
