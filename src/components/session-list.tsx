@@ -90,6 +90,7 @@ export function SessionList() {
 
   return (
     <>
+    <div className="flex flex-col items-center justify-center h-screen bg-background">
       <Card className="w-full max-w-lg mx-auto mt-8">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
@@ -143,6 +144,7 @@ export function SessionList() {
       >
         <ArrowLeftIcon className="w-6 h-6" />
       </Button>
+      </div>
     </>
   );
 }
