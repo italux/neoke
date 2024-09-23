@@ -2,7 +2,7 @@
 
 First and foremost, thank you! 🙃
 
-I appreciate that you want to contribute to the this project, your time is valuable, and your contributions mean a lot.
+I appreciate that you want to contribute to this project, your time is valuable, and your contributions mean a lot.
 
 ## Important!
 
@@ -13,7 +13,6 @@ By contributing to this project, you:
 * Agree that you have received the necessary permissions from your employer to make the contributions (if applicable)
 * Agree that the content you contribute may be provided under the Project license(s)
 * Agree that, if you did not author 100% of the content, the appropriate licenses and copyrights have been added along with any other necessary attribution.
-
 
 ## Getting started
 
