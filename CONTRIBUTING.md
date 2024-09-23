@@ -40,11 +40,11 @@ Don't have time to contribute? No worries, here are some other ways to show your
 
 Please only create issues for bug reports or feature requests. Issues discussing any other topics may be closed by the project's maintainers without further explanation.
 
-Do not create issues about bumping dependencies unless a bug has been identified and you can demonstrate that it effects this library.
+Do not create issues about bumping dependencies unless a bug has been identified and you can demonstrate that it affects this library.
 
 ### Help us to help you
 
-Remember that we’re here to help, but not to make guesses about what you need help with:
+Remember that we're here to help, but not to make guesses about what you need help with:
 
 - Whatever bug or issue you're experiencing, assume that it will not be as obvious to the maintainers as it is to you.
 - Spell it out completely. Keep in mind that maintainers need to think about _all potential use cases_ of a library. It's important that you explain how you're using a library so that maintainers can make that connection and solve the issue.
@@ -61,7 +61,6 @@ Try to follow these guidelines:
 - **Investigate the issue** - Search for exising issues (open or closed) that address the issue, and might have even resolved it already.
 - **Check the readme** - oftentimes you will find notes about creating issues, and where to go depending on the type of issue.
 - Create the issue in the appropriate repository.
-
 ### Creating an issue
 
 Please be as descriptive as possible when creating an issue. Give us the information we need to successfully answer your question or address your issue by answering the following in your issue:
