@@ -56,13 +56,13 @@ export function TermsOfService() {
           value: "item-8",
           title: "8. Governing Law",
           content:
-            "These Terms of Service are governed by the laws of [Insert Jurisdiction]. Any legal action related to your use of the service must be brought in the courts located in [Insert Location].",
+            "These Terms of Service are governed by the laws of Brazil. Any legal action related to your use of the service must be brought in the courts located in Brazil.",
         },
         {
           value: "item-9",
           title: "9. Contact Information",
           content:
-            "If you have any questions or concerns about these Terms of Service, please contact us at [Insert Contact Information].",
+            "If you have any questions or concerns about these Terms of Service, please contact us.",
         },
       ];
 

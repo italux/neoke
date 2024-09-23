@@ -1,33 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI-Powered Software Experiment
 
-## Getting Started
+This project is a personal experiment to explore whether it's possible to write a complete piece of software using **exclusively AI** tools, by merely copying and pasting code suggestions. The objective was to build a working application while relying entirely on AI-generated code, making minimal manual adjustments. 
 
-First, run the development server:
+### Experiment Overview
+
+The results, from my perspective, show that around **70-80% of the code provided works without any adjustments**, while the remaining 20-30% required some manual fixes or fine-tuning. The project uses a combination of modern AI tools to generate and refine the code:
+
+- **[v0.dev](https://v0.dev)** by Vercel to quickly generate UI layouts and components.
+- **ChatGPT** with GPT-4o and o1-preview to handle backend logic, write API calls, and implement core functionality.
+- **GitHub Copilot** to fill in small gaps, such as fixing syntax errors, adjusting CSS, or creating smaller components like buttons.
+
+This approach was highly efficient, and it was fascinating to see how these tools can work together to create a functional application.
+
+## Tools Used
+
+- **Next.js** for building the frontend and backend using React and Node.js.
+- **Vercel v0.dev** for UI layout generation.
+- **ChatGPT** for backend logic and API integration.
+- **GitHub Copilot** for syntax fixes and minor adjustments.
+- **CodeRabbit AI** for code review and code changes suggestions.
+
+
+## Installation and Running the App Locally
+
+To run this project on your local machine, follow these steps:
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/italux/neoke.git
+cd neoke
+```
+
+### 2. Install dependencies
+
+Make sure you have Node.js installed on your machine. Then, install the necessary packages by running:
+
+```bash
+npm install
+```
+
+### 3. Set up environment variables
+
+Create a `.env.local` file in the root of the project and configure any environment variables needed (such as API keys or database credentials).
+
+### 4. Run the development server
+
+Start the Next.js development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app will be available at [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 5. Build for production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To build the application for production, run:
 
-## Learn More
+```bash
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+This will create an optimized build of the application.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 6. Start the production server
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+After building, you can start the production server with:
+
+```bash
+npm start
+```
+
+### 7. Running tests (Optional)
+
+If you have tests set up, you can run them using:
+
+```bash
+npm run test
+```
 
 ## Deploy on Vercel
 
