@@ -4,48 +4,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { db } from "@/firebase/firebaseConfig";
-import {
-  Timestamp,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 export function EnterCode() {
   const router = useRouter();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
-  const [sessionCount, setSessionCount] = useState<number | null>(null);
-  const [sessionAlert, setSessionAlert] = useState(false);
-
-  // Fetch session count
-  useEffect(() => {
-    async function fetchSessionCount() {
-      try {
-        const sessionsCollection = collection(db, "sessions");
-        const now = Timestamp.now();
-        const sessionsQuery = query(
-          sessionsCollection,
-          where("expiresAt", ">", now)
-        );
-        const sessionsSnapshot = await getDocs(sessionsQuery);
-        setSessionCount(sessionsSnapshot.size);
-        setSessionAlert(true); // Set the alert to show after fetching data
-        // setTimeout(() => setSessionAlert(false), 5000);
-      } catch (error) {
-        console.error("Error fetching sessions count:", error);
-        setSessionCount(null);
-      }
-    }
-
-    fetchSessionCount();
-  }, []);
 
   // Handle input change in the session code inputs
   const handleInputChange = (
@@ -117,29 +84,6 @@ export function EnterCode() {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-background">
-      {/* Move the alert to the top of the page */}
-      {sessionAlert && sessionCount !== null && (
-        <div className="w-full max-w-lg absolute top-0 p-4">
-          <Link href="/sessions" passHref>
-            <div className="w-full top-0 p-4 cursor-pointer">
-              <Alert
-                variant="default"
-                className="bg-primary text-primary-foreground transition-colors duration-200 cursor-pointer"
-              >
-                <AlertTitle>
-                  {sessionCount === 0
-                    ? "There are currently no ongoing sessions."
-                    : `${sessionCount} Ongoing Session${
-                        sessionCount === 1 ? "" : "s"
-                      }`}
-                </AlertTitle>
-                <AlertDescription>Click to view</AlertDescription>
-              </Alert>
-            </div>
-          </Link>
-        </div>
-      )}
-
       <div className="max-w-md w-full space-y-4 p-6 rounded-lg shadow-lg bg-card">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Enter Session Code</h1>
