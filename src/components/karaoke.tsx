@@ -57,16 +57,16 @@ export function Karaoke({ code }: { code: string }) {
 
   // Fetch YouTube search results
   const fetchYouTubeResults = async (query: string) => {
-    if (!query || !YOUTUBE_API_KEY) return;
-
+    if (!query || query.length < 8 || !YOUTUBE_API_KEY) return;
+  
     const queryPrefix = "Karaoke +";
-
+  
     try {
       const response = await axios.get(
         `https://www.googleapis.com/youtube/v3/search`,
         {
           params: {
-            part: "snippet",
+            part: "snippet,status",
             q: queryPrefix + query,
             type: "video",
             maxResults: 3,
@@ -74,10 +74,12 @@ export function Karaoke({ code }: { code: string }) {
           },
         }
       );
-      const results = response.data.items.map((item: any) => ({
-        videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-        song: item.snippet.title,
-      }));
+      const results = response.data.items
+        .filter((item: any) => item.status.embeddable)
+        .map((item: any) => ({
+          videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+          song: item.snippet.title,
+        }));
       setSearchResults(results);
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
