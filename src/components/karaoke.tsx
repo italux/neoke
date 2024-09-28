@@ -59,9 +59,9 @@ export function Karaoke({ code }: { code: string }) {
   const fetchYouTubeResults = async (query: string) => {
     const MIN_QUERY_LENGTH = 8;
     if (!query || query.length < MIN_QUERY_LENGTH || !YOUTUBE_API_KEY) return;
-  
+
     const queryPrefix = "Karaoke +";
-  
+
     try {
       const response = await axios.get(
         `https://www.googleapis.com/youtube/v3/search`,
@@ -429,7 +429,9 @@ export function Karaoke({ code }: { code: string }) {
       <div className="border-b md:border-r p-6 space-y-4 overflow-auto">
         {currentVideo ? (
           <>
-          <h2 className="text-2xl font-bold hidden md:block text-center">Now Singing</h2>
+            <h2 className="text-2xl font-bold hidden md:block text-center">
+              Now Singing
+            </h2>
             <div className="aspect-video w-full rounded-lg overflow-hidden hidden md:block">
               <iframe
                 src={`https://www.youtube.com/embed/${extractVideoId(
@@ -449,7 +451,9 @@ export function Karaoke({ code }: { code: string }) {
               <div className="text-lg md:text-lg text-muted-foreground">
                 {currentVideo.song}
               </div>
-              <div className="text-lg p-2 text-muted-foreground font-semibold">Now Singing</div>
+              <div className="text-lg p-2 text-muted-foreground font-semibold">
+                Now Singing
+              </div>
             </div>
           </>
         ) : (
