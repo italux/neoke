@@ -15,7 +15,6 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  updateDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { JSX, SVGProps, useEffect, useState } from "react";
@@ -43,31 +42,27 @@ export function Karaoke({ code }: { code: string }) {
     }>
   >([]);
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
-  const [editingIndex, setEditingIndex] = useState(null);
   const [newName, setNewName] = useState("");
   const [newSong, setNewSong] = useState("");
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [newNameError, setNewNameError] = useState("");
   const [newVideoUrlError, setNewVideoUrlError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-
   const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
-  // Fetch YouTube search results
   const fetchYouTubeResults = async (query: string) => {
     const MIN_QUERY_LENGTH = 8;
-    if (!query || query.length < MIN_QUERY_LENGTH || !YOUTUBE_API_KEY) return;
-
+    if (!query || !YOUTUBE_API_KEY) return;
+  
     const queryPrefix = "Karaoke +";
-
+  
     try {
       const response = await axios.get(
         `https://www.googleapis.com/youtube/v3/search`,
         {
           params: {
-            part: "snippet,status",
+            part: "snippet",
             q: queryPrefix + query,
             type: "video",
             maxResults: 3,
@@ -75,12 +70,34 @@ export function Karaoke({ code }: { code: string }) {
           },
         }
       );
+  
+      // Get the video IDs from the search results
+      const videoIds = response.data.items.map((item: any) => item.id.videoId).join(",");
+  
+      // Make a second request to get video status (embeddable)
+      const videoDetailsResponse = await axios.get(
+        `https://www.googleapis.com/youtube/v3/videos`,
+        {
+          params: {
+            part: "status",
+            id: videoIds,
+            key: YOUTUBE_API_KEY,
+          },
+        }
+      );
+  
+      const embeddableVideos = videoDetailsResponse.data.items.filter(
+        (item: any) => item.status.embeddable
+      );
+  
+      // Combine snippet data with the embeddable status
       const results = response.data.items
-        .filter((item: any) => item.status.embeddable)
+        .filter((item: any) => embeddableVideos.find((video: any) => video.id === item.id.videoId))
         .map((item: any) => ({
           videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
           song: item.snippet.title,
         }));
+  
       setSearchResults(results);
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
@@ -111,8 +128,6 @@ export function Karaoke({ code }: { code: string }) {
   useEffect(() => {
     if (!code) return;
 
-    console.log("Setting up Firestore listeners for session:", code);
-
     const queueRef = collection(db, "sessions", code, "queue");
     const q = query(queueRef, orderBy("addedAt"));
 
@@ -123,7 +138,6 @@ export function Karaoke({ code }: { code: string }) {
           id: doc.id,
           ...doc.data(),
         }));
-        console.log("Received queue data:", queueData);
         setQueue(queueData);
         setLoading(false);
       },
@@ -144,10 +158,8 @@ export function Karaoke({ code }: { code: string }) {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          console.log("Received current video data:", data);
           setCurrentVideo(data as Video);
         } else {
-          console.log("No current video data found");
           setCurrentVideo(null);
         }
       },
@@ -157,7 +169,6 @@ export function Karaoke({ code }: { code: string }) {
     );
 
     return () => {
-      console.log("Cleaning up Firestore listeners for session:", code);
       unsubscribeQueue();
       unsubscribeCurrentVideo();
     };
@@ -176,17 +187,17 @@ export function Karaoke({ code }: { code: string }) {
     } else {
       setNewVideoUrlError("");
     }
+
     if (newName && newVideoUrl) {
       const newQueueItem = {
         name: newName,
-        song: newSong || "", // Ensure it's a string
+        song: newSong || "",
         videoUrl: newVideoUrl,
-        addedAt: serverTimestamp(), // Add timestamp here
+        addedAt: serverTimestamp(),
       };
-      console.log("Attempting to add to Firestore:", newQueueItem);
+
       try {
         await addDoc(collection(db, "sessions", code, "queue"), newQueueItem);
-        console.log("Successfully added to Firestore");
         setNewName("");
         setNewSong("");
         setNewVideoUrl("");
@@ -211,48 +222,13 @@ export function Karaoke({ code }: { code: string }) {
     song: string;
   }) => {
     try {
-      // Remove the item from the queue
       await deleteDoc(doc(db, "sessions", code, "queue", item.id));
-      // Set the current video
       await setDoc(doc(db, "sessions", code, "currentVideo", "current"), {
         ...item,
-        name: item.name,
-        song: item.song,
       });
     } catch (error) {
       console.error("Error updating current video: ", error);
     }
-  };
-
-  const handleEditChange = (index: number, field: string, value: string) => {
-    const updatedQueue = [...queue];
-    updatedQueue[index] = {
-      ...updatedQueue[index],
-      [field]: value,
-    };
-    setQueue(updatedQueue);
-  };
-
-  const saveEdit = async (item: {
-    id: any;
-    name?: any;
-    song?: any;
-    videoUrl?: any;
-  }) => {
-    try {
-      await updateDoc(doc(db, "sessions", code, "queue", item.id), {
-        name: item.name,
-        song: item.song,
-        videoUrl: item.videoUrl,
-      });
-      setEditingIndex(null);
-    } catch (error) {
-      console.error("Error updating document: ", error);
-    }
-  };
-
-  const cancelEdit = () => {
-    setEditingIndex(null);
   };
 
   const extractVideoId = (url: string) => {
@@ -260,14 +236,12 @@ export function Karaoke({ code }: { code: string }) {
     return match ? match[1] : null;
   };
 
-  // Handle song input change and fetch YouTube search results
   const handleSongInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const song = e.target.value;
     setNewSong(song);
     fetchYouTubeResults(song);
   };
 
-  // Handle YouTube result selection
   const handleSelectResult = (result: { song: string; videoUrl: string }) => {
     setNewSong(result.song);
     setNewVideoUrl(result.videoUrl);
@@ -275,15 +249,7 @@ export function Karaoke({ code }: { code: string }) {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        Loading session...
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center">{error}</div>;
+    return <div>Loading session...</div>;
   }
 
   return (
@@ -291,92 +257,42 @@ export function Karaoke({ code }: { code: string }) {
       <div className="border-b md:border-r p-6 space-y-4 overflow-auto">
         <h2 className="text-2xl font-bold">Karaoke Queue</h2>
         <div className="space-y-2">
-          {queue.map((item, index) =>
+          {queue.map((item) =>
             item.name ? (
               <div
                 key={item.id}
                 className="flex items-center justify-between bg-muted p-3 rounded-md"
-                onDoubleClick={() => setEditingIndex(index as unknown as null)}
               >
-                {editingIndex === index ? (
-                  // Render editable inputs
-                  <div className="flex items-center gap-3 w-full">
-                    <div className="grid gap-4 w-full">
-                      <Input
-                        value={item.name}
-                        onChange={(e) =>
-                          handleEditChange(index, "name", e.target.value)
-                        }
-                        placeholder="Your Name for Queue"
-                        required
-                      />
-                      <Input
-                        value={item.song}
-                        onChange={(e) =>
-                          handleEditChange(index, "song", e.target.value)
-                        }
-                        placeholder="Song or Artist Name"
-                      />
-                      <Input
-                        value={item.videoUrl}
-                        onChange={(e) =>
-                          handleEditChange(index, "videoUrl", e.target.value)
-                        }
-                        placeholder="Youtube Video URL"
-                      />
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => saveEdit(item)}
-                    >
-                      <CheckIcon className="w-6 h-6 text-green-500" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => cancelEdit()}
-                    >
-                      <XIcon className="w-6 h-6 text-red-500" />
-                    </Button>
-                  </div>
-                ) : (
-                  // Render item as usual
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <div className="font-medium">{item.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {item.song}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          handlePlayVideo({
-                            id: item.id,
-                            videoUrl: item.videoUrl,
-                            name: item.name,
-                            song: item.song,
-                          })
-                        }
-                        aria-label="Play video"
-                      >
-                        <ArrowRightIcon className="w-6 h-6 text-muted-foreground" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteFromQueue(item.id)}
-                      >
-                        <TrashIcon className="w-6 h-6 text-red-500" />
-                      </Button>
+                <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteFromQueue(item.id)}
+                >
+                  <TrashIcon className="w-4 h-4 text-red-500" />
+                </Button>
+                  <div>
+                    <div className="font-medium">{item.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {item.song}
                     </div>
                   </div>
-                )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    handlePlayVideo({
+                      id: item.id,
+                      videoUrl: item.videoUrl,
+                      name: item.name,
+                      song: item.song,
+                    })
+                  }
+                  aria-label="Play video"
+                >
+                  <ArrowRightIcon className="w-6 h-6 text-muted-foreground" />
+                </Button>
               </div>
             ) : null
           )}
@@ -400,7 +316,7 @@ export function Karaoke({ code }: { code: string }) {
                 <Input
                   value={newVideoUrl}
                   onChange={(e) => setNewVideoUrl(e.target.value)}
-                  placeholder="Insert Youtube Video URL"
+                  placeholder="Insert YouTube Video URL"
                 />
                 {newVideoUrlError && (
                   <div className="text-red-500 text-sm">{newVideoUrlError}</div>
@@ -426,69 +342,23 @@ export function Karaoke({ code }: { code: string }) {
           </div>
         </div>
       </div>
-      <div className="border-b md:border-r p-6 space-y-4 overflow-auto">
-        {currentVideo ? (
-          <>
-            <h2 className="text-2xl font-bold hidden md:block text-center">
-              Now Singing
-            </h2>
-            <div className="aspect-video w-full rounded-lg overflow-hidden hidden md:block">
-              <iframe
-                src={`https://www.youtube.com/embed/${extractVideoId(
-                  currentVideo.videoUrl
-                )}`}
-                title="YouTube video player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                className="w-full h-full"
-              />
-            </div>
-            <div className="text-center mt-4">
-              <div className="text-2xl md:text-3xl font-bold">
-                {currentVideo.name}
-              </div>
-              <div className="text-lg md:text-lg text-muted-foreground">
-                {currentVideo.song}
-              </div>
-              <div className="text-lg p-2 text-muted-foreground font-semibold">
-                Now Singing
-              </div>
-            </div>
-          </>
-        ) : (
-          <div>No video currently playing</div>
-        )}
-      </div>
-
-      {/* Floating button for Speed Dial */}
-      <Button
-        className="fixed bottom-5 left-5 rounded-lg p-4 bg-primary text-primary-foreground shadow-lg hover:bg-primary-hover"
-        onClick={() => router.push("/")}
-      >
-        <HomeIcon className="w-6 h-6" />
-      </Button>
+      {currentVideo && (
+        <div className="p-6">
+          <div className="aspect-video w-full rounded-lg overflow-hidden">
+            <iframe
+              src={`https://www.youtube.com/embed/${extractVideoId(
+                currentVideo.videoUrl
+              )}`}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="w-full h-full"
+            />
+          </div>
+        </div>
+      )}
     </div>
-  );
-}
-
-function HomeIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 12L12 3l9 9" />
-      <path d="M9 21V9h6v12" />
-    </svg>
   );
 }
 
@@ -530,44 +400,6 @@ function PlusIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
     >
       <path d="M5 12h14" />
       <path d="M12 5v14" />
-    </svg>
-  );
-}
-
-function CheckIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M5 13l4 4L19 7"
-      />
-    </svg>
-  );
-}
-
-function XIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M6 18L18 6M6 6l12 12"
-      />
     </svg>
   );
 }
