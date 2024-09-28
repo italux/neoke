@@ -57,7 +57,8 @@ export function Karaoke({ code }: { code: string }) {
 
   // Fetch YouTube search results
   const fetchYouTubeResults = async (query: string) => {
-    if (!query || query.length < 8 || !YOUTUBE_API_KEY) return;
+    const MIN_QUERY_LENGTH = 8;
+    if (!query || query.length < MIN_QUERY_LENGTH || !YOUTUBE_API_KEY) return;
   
     const queryPrefix = "Karaoke +";
   
