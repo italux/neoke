@@ -17,9 +17,9 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
-import { useRouter } from "next/navigation";
-import { JSX, SVGProps, useEffect, useState, useCallback } from "react";
 import debounce from "lodash.debounce";
+import { useRouter } from "next/navigation";
+import { JSX, SVGProps, useCallback, useEffect, useState } from "react";
 
 const youtubeUrlRegex =
   /^(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|shorts\/)?([a-zA-Z0-9_-]{11})(?:\S+)?$/;
@@ -55,11 +55,11 @@ export function Karaoke({ code }: { code: string }) {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
   const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+  const DEBOUNCE_TIME_MS = 300;
+  const MIN_QUERY_LENGTH = 5;
 
-  // Debounced YouTube search function
   const fetchYouTubeResults = useCallback(
     debounce(async (query: string) => {
-      const MIN_QUERY_LENGTH = 5;
       if (!query || query.length < MIN_QUERY_LENGTH || !YOUTUBE_API_KEY) return;
 
       const queryPrefix = "Karaoke +";
@@ -99,9 +99,7 @@ export function Karaoke({ code }: { code: string }) {
 
         const results = response.data.items
           .filter((item: any) =>
-            embeddableVideos.find(
-              (video: any) => video.id === item.id.videoId
-            )
+            embeddableVideos.find((video: any) => video.id === item.id.videoId)
           )
           .map((item: any) => ({
             videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
@@ -112,7 +110,7 @@ export function Karaoke({ code }: { code: string }) {
       } catch (error) {
         console.error("Error fetching YouTube results:", error);
       }
-    }, 300),
+    }, DEBOUNCE_TIME_MS),
     []
   );
 
