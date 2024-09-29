@@ -18,7 +18,8 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { JSX, SVGProps, useEffect, useState } from "react";
+import { JSX, SVGProps, useEffect, useState, useCallback } from "react";
+import debounce from "lodash.debounce";
 
 const youtubeUrlRegex =
   /^(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|shorts\/)?([a-zA-Z0-9_-]{11})(?:\S+)?$/;
@@ -55,62 +56,65 @@ export function Karaoke({ code }: { code: string }) {
 
   const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
-  const fetchYouTubeResults = async (query: string) => {
-    const MIN_QUERY_LENGTH = 8;
-    if (!query || query.length < MIN_QUERY_LENGTH || !YOUTUBE_API_KEY) return;
+  // Debounced YouTube search function
+  const fetchYouTubeResults = useCallback(
+    debounce(async (query: string) => {
+      const MIN_QUERY_LENGTH = 5;
+      if (!query || query.length < MIN_QUERY_LENGTH || !YOUTUBE_API_KEY) return;
 
-    const queryPrefix = "Karaoke +";
+      const queryPrefix = "Karaoke +";
 
-    try {
-      const response = await axios.get(
-        `https://www.googleapis.com/youtube/v3/search`,
-        {
-          params: {
-            part: "snippet",
-            q: queryPrefix + query,
-            type: "video",
-            maxResults: 3,
-            key: YOUTUBE_API_KEY,
-          },
-        }
-      );
+      try {
+        const response = await axios.get(
+          `https://www.googleapis.com/youtube/v3/search`,
+          {
+            params: {
+              part: "snippet",
+              q: queryPrefix + query,
+              type: "video",
+              maxResults: 3,
+              key: YOUTUBE_API_KEY,
+            },
+          }
+        );
 
-      // Get the video IDs from the search results
-      const videoIds = response.data.items
-        .map((item: any) => item.id.videoId)
-        .join(",");
+        const videoIds = response.data.items
+          .map((item: any) => item.id.videoId)
+          .join(",");
 
-      // Make a second request to get video status (embeddable)
-      const videoDetailsResponse = await axios.get(
-        `https://www.googleapis.com/youtube/v3/videos`,
-        {
-          params: {
-            part: "status",
-            id: videoIds,
-            key: YOUTUBE_API_KEY,
-          },
-        }
-      );
+        const videoDetailsResponse = await axios.get(
+          `https://www.googleapis.com/youtube/v3/videos`,
+          {
+            params: {
+              part: "status",
+              id: videoIds,
+              key: YOUTUBE_API_KEY,
+            },
+          }
+        );
 
-      const embeddableVideos = videoDetailsResponse.data.items.filter(
-        (item: any) => item.status.embeddable
-      );
+        const embeddableVideos = videoDetailsResponse.data.items.filter(
+          (item: any) => item.status.embeddable
+        );
 
-      // Combine snippet data with the embeddable status
-      const results = response.data.items
-        .filter((item: any) =>
-          embeddableVideos.find((video: any) => video.id === item.id.videoId)
-        )
-        .map((item: any) => ({
-          videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-          song: item.snippet.title,
-        }));
+        const results = response.data.items
+          .filter((item: any) =>
+            embeddableVideos.find(
+              (video: any) => video.id === item.id.videoId
+            )
+          )
+          .map((item: any) => ({
+            videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+            song: item.snippet.title,
+          }));
 
-      setSearchResults(results);
-    } catch (error) {
-      console.error("Error fetching YouTube results:", error);
-    }
-  };
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Error fetching YouTube results:", error);
+      }
+    }, 300),
+    []
+  );
 
   // Verify that the session code exists
   useEffect(() => {
