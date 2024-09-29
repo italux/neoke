@@ -55,9 +55,9 @@ export function Karaoke({ code }: { code: string }) {
 
   const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
-  // Fetch YouTube search results
   const fetchYouTubeResults = async (query: string) => {
-    if (!query || !YOUTUBE_API_KEY) return;
+    const MIN_QUERY_LENGTH = 8;
+    if (!query || query.length < MIN_QUERY_LENGTH || !YOUTUBE_API_KEY) return;
 
     const queryPrefix = "Karaoke +";
 
@@ -74,10 +74,38 @@ export function Karaoke({ code }: { code: string }) {
           },
         }
       );
-      const results = response.data.items.map((item: any) => ({
-        videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-        song: item.snippet.title,
-      }));
+
+      // Get the video IDs from the search results
+      const videoIds = response.data.items
+        .map((item: any) => item.id.videoId)
+        .join(",");
+
+      // Make a second request to get video status (embeddable)
+      const videoDetailsResponse = await axios.get(
+        `https://www.googleapis.com/youtube/v3/videos`,
+        {
+          params: {
+            part: "status",
+            id: videoIds,
+            key: YOUTUBE_API_KEY,
+          },
+        }
+      );
+
+      const embeddableVideos = videoDetailsResponse.data.items.filter(
+        (item: any) => item.status.embeddable
+      );
+
+      // Combine snippet data with the embeddable status
+      const results = response.data.items
+        .filter((item: any) =>
+          embeddableVideos.find((video: any) => video.id === item.id.videoId)
+        )
+        .map((item: any) => ({
+          videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+          song: item.snippet.title,
+        }));
+
       setSearchResults(results);
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
@@ -426,7 +454,9 @@ export function Karaoke({ code }: { code: string }) {
       <div className="border-b md:border-r p-6 space-y-4 overflow-auto">
         {currentVideo ? (
           <>
-          <h2 className="text-2xl font-bold hidden md:block text-center">Now Singing</h2>
+            <h2 className="text-2xl font-bold hidden md:block text-center">
+              Now Singing
+            </h2>
             <div className="aspect-video w-full rounded-lg overflow-hidden hidden md:block">
               <iframe
                 src={`https://www.youtube.com/embed/${extractVideoId(
@@ -446,7 +476,9 @@ export function Karaoke({ code }: { code: string }) {
               <div className="text-lg md:text-lg text-muted-foreground">
                 {currentVideo.song}
               </div>
-              <div className="text-lg p-2 text-muted-foreground font-semibold">Now Singing</div>
+              <div className="text-lg p-2 text-muted-foreground font-semibold">
+                Now Singing
+              </div>
             </div>
           </>
         ) : (
