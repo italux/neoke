@@ -17,8 +17,9 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
+import debounce from "lodash.debounce";
 import { useRouter } from "next/navigation";
-import { JSX, SVGProps, useEffect, useState } from "react";
+import { JSX, SVGProps, useCallback, useEffect, useState } from "react";
 
 const youtubeUrlRegex =
   /^(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|shorts\/)?([a-zA-Z0-9_-]{11})(?:\S+)?$/;
@@ -54,35 +55,64 @@ export function Karaoke({ code }: { code: string }) {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
   const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+  const DEBOUNCE_TIME_MS = 300;
+  const MIN_QUERY_LENGTH = 5;
 
-  // Fetch YouTube search results
-  const fetchYouTubeResults = async (query: string) => {
-    if (!query || !YOUTUBE_API_KEY) return;
+  const fetchYouTubeResults = useCallback(
+    debounce(async (query: string) => {
+      if (!query || query.length < MIN_QUERY_LENGTH || !YOUTUBE_API_KEY) return;
 
-    const queryPrefix = "Karaoke +";
+      const queryPrefix = "Karaoke +";
 
-    try {
-      const response = await axios.get(
-        `https://www.googleapis.com/youtube/v3/search`,
-        {
-          params: {
-            part: "snippet",
-            q: queryPrefix + query,
-            type: "video",
-            maxResults: 3,
-            key: YOUTUBE_API_KEY,
-          },
-        }
-      );
-      const results = response.data.items.map((item: any) => ({
-        videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-        song: item.snippet.title,
-      }));
-      setSearchResults(results);
-    } catch (error) {
-      console.error("Error fetching YouTube results:", error);
-    }
-  };
+      try {
+        const response = await axios.get(
+          `https://www.googleapis.com/youtube/v3/search`,
+          {
+            params: {
+              part: "snippet",
+              q: queryPrefix + query,
+              type: "video",
+              maxResults: 3,
+              key: YOUTUBE_API_KEY,
+            },
+          }
+        );
+
+        const videoIds = response.data.items
+          .map((item: any) => item.id.videoId)
+          .join(",");
+
+        const videoDetailsResponse = await axios.get(
+          `https://www.googleapis.com/youtube/v3/videos`,
+          {
+            params: {
+              part: "status",
+              id: videoIds,
+              key: YOUTUBE_API_KEY,
+            },
+          }
+        );
+
+        const embeddableVideos = videoDetailsResponse.data.items.filter(
+          (item: any) => item.status.embeddable
+        );
+
+        const results = response.data.items
+          .filter((item: any) =>
+            embeddableVideos.find((video: any) => video.id === item.id.videoId)
+          )
+          .map((item: any) => ({
+            videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+            song: item.snippet.title,
+          }));
+
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Error fetching YouTube results:", error);
+      }
+    }, DEBOUNCE_TIME_MS),
+    []
+  );
 
   // Verify that the session code exists
   useEffect(() => {
@@ -426,7 +456,9 @@ export function Karaoke({ code }: { code: string }) {
       <div className="border-b md:border-r p-6 space-y-4 overflow-auto">
         {currentVideo ? (
           <>
-          <h2 className="text-2xl font-bold hidden md:block text-center">Now Singing</h2>
+            <h2 className="text-2xl font-bold hidden md:block text-center">
+              Now Singing
+            </h2>
             <div className="aspect-video w-full rounded-lg overflow-hidden hidden md:block">
               <iframe
                 src={`https://www.youtube.com/embed/${extractVideoId(
@@ -446,7 +478,9 @@ export function Karaoke({ code }: { code: string }) {
               <div className="text-lg md:text-lg text-muted-foreground">
                 {currentVideo.song}
               </div>
-              <div className="text-lg p-2 text-muted-foreground font-semibold">Now Singing</div>
+              <div className="text-lg p-2 text-muted-foreground font-semibold">
+                Now Singing
+              </div>
             </div>
           </>
         ) : (
