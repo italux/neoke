@@ -36,18 +36,23 @@ export function SignUp() {
       router.push("/sessions");
     } catch (err) {
       if (err instanceof Error) {
-        switch (err.message) {
-          case 'Firebase: Error (auth/email-already-in-use).':
-            setError('This email is already in use. Please use a different email.');
+        const firebaseError = err as any;
+        switch (firebaseError.code) {
+          case "auth/email-already-in-use":
+            setError(
+              "This email is already in use. Please use a different email."
+            );
             break;
-          case 'Firebase: Error (auth/invalid-email).':
-            setError('The email address is not valid. Please enter a valid email.');
+          case "auth/invalid-email":
+            setError(
+              "The email address is not valid. Please enter a valid email."
+            );
             break;
-          case 'Firebase: Password should be at least 6 characters (auth/weak-password)':
-            setError('Password should be at least 6 characters.');
+          case "auth/weak-password":
+            setError("Password should be at least 6 characters.");
             break;
           default:
-            setError('Signup failed. Please try again.');
+            setError("Signup failed. Please try again.");
         }
       } else {
         setError("Signup failed. Please try again.");
@@ -66,7 +71,19 @@ export function SignUp() {
       router.push("/sessions");
     } catch (err) {
       if (err instanceof Error) {
-        setError(`Google sign-in failed: ${err.message}`);
+        const firebaseError = err as any;
+        switch (firebaseError.code) {
+          case "auth/popup-closed-by-user":
+            setError(
+              "The sign-in popup was closed before completing the sign-in."
+            );
+            break;
+          case "auth/cancelled-popup-request":
+            setError("Cancelled previous sign-in popup.");
+            break;
+          default:
+            setError("Google sign-in failed. Please try again.");
+        }
       } else {
         setError("Google sign-in failed. Please try again.");
       }
