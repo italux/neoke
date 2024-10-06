@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -9,13 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { auth, googleProvider } from "@/firebase/firebaseConfig";
-import GoogleIcon from "@mui/icons-material/Google";
 import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import GoogleIcon from "@mui/icons-material/Google";
 import { useRouter } from "next/navigation";
 import { SVGProps, useState } from "react";
 
@@ -24,7 +24,12 @@ export function SignUp() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
+  };
 
   async function handleSignUp(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -118,13 +123,27 @@ export function SignUp() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={passwordVisible ? "text" : "password"} // Toggle password type
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <Button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  variant="ghost"
+                >
+                  {passwordVisible ? (
+                    <Eye className="h-5 w-5" />
+                  ) : (
+                    <EyeOff className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
             </div>
             <Button className="w-full mt-4" type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
