@@ -33,7 +33,7 @@ export function SignUp() {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      router.push("/sessions"); // Redirect after successful signup
+      router.push("/sessions");
     } catch (err) {
       if (err instanceof Error) {
         switch (err.message) {
@@ -63,7 +63,7 @@ export function SignUp() {
 
     try {
       await signInWithPopup(auth, googleProvider);
-      router.push("/sessions"); // Redirect after Google sign-in
+      router.push("/sessions");
     } catch (err) {
       if (err instanceof Error) {
         setError(`Google sign-in failed: ${err.message}`);

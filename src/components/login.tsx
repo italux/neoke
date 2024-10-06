@@ -20,7 +20,7 @@ import {
 } from "firebase/auth";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // For routing
+import { useRouter } from "next/navigation";
 import { SVGProps, useEffect, useState } from "react";
 
 export function Login() {
@@ -30,14 +30,13 @@ export function Login() {
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  // Check if user is already logged in
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.push("/join"); // User is signed in, redirect to the join page
+        router.push("/join");
       }
     });
-    return () => unsubscribe(); // Clean up the subscription
+    return () => unsubscribe();
   }, [router]);
 
   async function onSubmit(event: React.SyntheticEvent) {
@@ -47,7 +46,7 @@ export function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/sessions"); // Redirect after successful login
+      router.push("/sessions");
     } catch (err) {
       setError("Login failed. Please check your credentials.");
     } finally {
@@ -61,7 +60,7 @@ export function Login() {
 
     try {
       await signInWithPopup(auth, googleProvider);
-      router.push("/sessions"); // Redirect after Google sign-in
+      router.push("/sessions");
     } catch (err) {
       setError("Google sign-in failed. Please try again.");
     } finally {

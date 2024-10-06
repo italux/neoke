@@ -1,4 +1,4 @@
-"use client"; // Mark RootLayout as a client component
+"use client";
 
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -27,20 +27,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const router = useRouter();
-  const pathname = usePathname(); // Get current pathname
+  const pathname = usePathname();
   const [metadata, setMetadata] = useState({
     title: "",
     description: "",
   });
 
-  // Update metadata based on pathname
   useEffect(() => {
     const generatedMetadata = generateMetadata(pathname);
     setMetadata({
       title: String(generatedMetadata.title) ?? "",
       description: generatedMetadata.description ?? "",
     });
-  }, [pathname]); // Recompute when pathname changes
+  }, [pathname]);
 
   return (
     <html lang="en">
@@ -56,7 +55,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Header */}
         <header className="flex justify-between items-center p-4 bg-background border-b">
           <div className="flex items-center space-x-4">
             <Image
