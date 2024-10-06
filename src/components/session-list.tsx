@@ -12,6 +12,7 @@ import {
   Timestamp,
   where,
 } from "firebase/firestore";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   MouseEventHandler,
@@ -79,6 +80,7 @@ export function SessionList() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
+        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
         Loading sessions...
       </div>
     );

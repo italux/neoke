@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // For routing
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,20 +13,76 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { auth, googleProvider } from "@/firebase/firebaseConfig";
 import GoogleIcon from "@mui/icons-material/Google";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  onAuthStateChanged,
+} from "firebase/auth";
 
 export function Login() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, redirect to the join page
+        router.push("/join");
+      }
+    });
+    return () => unsubscribe(); // Clean up the subscription
+  }, [router]);
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    setTimeout(() => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push("/sessions"); // Redirect after successful login
+    } catch (err) {
+      setError("Login failed. Please check your credentials.");
+    } finally {
       setIsLoading(false);
-    }, 3000);
+    }
+  }
+
+  async function handleSignUp(event: React.SyntheticEvent) {
+    event.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      router.push("/sessions"); // Redirect after successful signup
+    } catch (err) {
+      setError("Signup failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await signInWithPopup(auth, googleProvider);
+      router.push("/sessions"); // Redirect after Google sign-in
+    } catch (err) {
+      setError("Google sign-in failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -35,7 +93,7 @@ export function Login() {
             Login
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your email and password to login
+            Enter your email and password to login or sign up
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -50,17 +108,37 @@ export function Login() {
                 autoComplete="email"
                 autoCorrect="off"
                 disabled={isLoading}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="grid gap-2 mt-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" disabled={isLoading} />
+              <Input
+                id="password"
+                type="password"
+                disabled={isLoading}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
             <Button className="w-full mt-4" type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
           </form>
+          <Button
+            variant="link"
+            className="w-full"
+            onClick={handleSignUp}
+            disabled={isLoading}
+          >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Sign Up
+          </Button>
+
+          {error && <p className="text-red-500">{error}</p>}
+
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -71,13 +149,17 @@ export function Login() {
               </span>
             </div>
           </div>
-          <Button variant="outline" type="button" disabled={isLoading}>
+          <Button
+            variant="outline"
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+          >
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <GoogleIcon className="mr-2 h-4 w-4" />
             )}
-            with Google
+            Sign in with Google
           </Button>
         </CardContent>
         <CardFooter>

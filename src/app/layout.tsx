@@ -1,7 +1,13 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
-import "./globals.css";
+"use client"; // Mark RootLayout as a client component
+
 import { Footer } from "@/components/footer";
+import { Button } from "@/components/ui/button";
+import Link from "next/link"
+import localFont from "next/font/local";
+import { useRouter, usePathname } from "next/navigation";
+import "./globals.css";
+import { generateMetadata } from "./metadata";
+import { useEffect, useState } from "react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -14,18 +20,34 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const metadata: Metadata = {
-  title: "NeoKÊ",
-  description: "Karaokê online queue",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const router = useRouter();
+  const pathname = usePathname(); // Get current pathname
+  const [metadata, setMetadata] = useState({
+    title: "",
+    description: "",
+  });
+
+  // Update metadata based on pathname
+  useEffect(() => {
+    const generatedMetadata = generateMetadata(pathname);
+    setMetadata({
+      title: String(generatedMetadata.title) ?? "",
+      description: generatedMetadata.description ?? "",
+    });
+  }, [pathname]); // Recompute when pathname changes
+
   return (
     <html lang="en">
+      <head>
+        <title>{String(metadata.title)}</title>
+        <meta name="description" content={metadata.description ?? ""} />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <meta
         name="google-site-verification"
         content="J3VVJwCpREAwdmI9bRsG04lZ65q7Fon7v4ULHhGSOCY"
@@ -33,6 +55,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* Header */}
+        <header className="flex justify-between items-center p-4 bg-background border-b">
+          <div className="flex items-center space-x-4">
+            <img src="logo-512x512.png" alt="NeoKÊ Logo" className="h-6 w-6" />
+            <Link href="/" className="text-primary">
+              <h1 className="text-2xl font-bold text-primary">NeoKÊ</h1>
+            </Link>
+          </div>
+          <div className="flex items-center space-x-4">
+            <p className="text-sm text-muted-foreground hidden sm:block">
+              Ready to sing?
+            </p>
+            <Button onClick={() => router.push("/join")}>Join</Button>
+          </div>
+        </header>
         {children}
         <Footer />
       </body>

@@ -8,7 +8,7 @@ export function HomePage() {
   const router = useRouter();
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="flex justify-between items-center p-4 bg-background border-b">
+      {/* <header className="flex justify-between items-center p-4 bg-background border-b">
         <div className="flex items-center space-x-2">
           <img src="logo-512x512.png" alt="NeoKÊ Logo" className="h-6 w-6" />
           <h1 className="text-2xl font-bold text-primary">NeoKÊ</h1>
@@ -19,7 +19,7 @@ export function HomePage() {
           </p>
           <Button onClick={() => router.push("/join")}>Join</Button>
         </div>
-      </header>
+      </header> */}
 
       <main className="flex-grow flex flex-col items-center justify-center p-4 text-center">
         <div className="mb-8">
