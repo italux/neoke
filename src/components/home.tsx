@@ -14,7 +14,8 @@ export function HomePage() {
           <Image
             src="/logo-512x512.png"
             alt="NeoKÊ Logo"
-            className=" mx-auto mb-4 h-16 w-16"
+            width={24}
+            height={24}
           />
           <h2 className="text-4xl font-extrabold mb-4">Welcome to NeoKÊ</h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-md">

@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // For routing
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,13 +13,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { auth, googleProvider } from "@/firebase/firebaseConfig";
 import GoogleIcon from "@mui/icons-material/Google";
-import { Loader2 } from "lucide-react";
 import {
   createUserWithEmailAndPassword,
+  onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
-  onAuthStateChanged,
 } from "firebase/auth";
+import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation"; // For routing
+import { useEffect, useState } from "react";
 
 export function Login() {
   const router = useRouter();
@@ -127,15 +128,12 @@ export function Login() {
               Sign In
             </Button>
           </form>
-          <Button
-            variant="link"
-            className="w-full"
-            onClick={handleSignUp}
-            disabled={isLoading}
-          >
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign Up
-          </Button>
+          <p className="text-sm text-center text-muted-foreground">
+            Don&apos;t have a account?{" "}
+            <Link href="/login" className="text-primary hover:underline">
+              Sign up
+            </Link>
+          </p>
 
           {error && <p className="text-red-500">{error}</p>}
 
@@ -145,21 +143,13 @@ export function Login() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
+                OR
               </span>
             </div>
           </div>
-          <Button
-            variant="outline"
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <GoogleIcon className="mr-2 h-4 w-4" />
-            )}
-            Sign in with Google
+          <Button variant="outline" onClick={handleGoogleSignIn}>
+            <GoogleIcon className="mr-2 h-6 w-6" />
+            Continue with Google
           </Button>
         </CardContent>
         <CardFooter>
