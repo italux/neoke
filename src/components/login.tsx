@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { auth, googleProvider } from "@/firebase/firebaseConfig";
 import GoogleIcon from "@mui/icons-material/Google";
 import {
-  createUserWithEmailAndPassword,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -22,7 +21,7 @@ import {
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation"; // For routing
-import { useEffect, useState } from "react";
+import { SVGProps, useEffect, useState } from "react";
 
 export function Login() {
   const router = useRouter();
@@ -35,8 +34,7 @@ export function Login() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in, redirect to the join page
-        router.push("/join");
+        router.push("/join"); // User is signed in, redirect to the join page
       }
     });
     return () => unsubscribe(); // Clean up the subscription
@@ -52,21 +50,6 @@ export function Login() {
       router.push("/sessions"); // Redirect after successful login
     } catch (err) {
       setError("Login failed. Please check your credentials.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function handleSignUp(event: React.SyntheticEvent) {
-    event.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      router.push("/sessions"); // Redirect after successful signup
-    } catch (err) {
-      setError("Signup failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +77,7 @@ export function Login() {
             Login
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your email and password to login or sign up
+            Enter your email and password to login
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -129,8 +112,8 @@ export function Login() {
             </Button>
           </form>
           <p className="text-sm text-center text-muted-foreground">
-            Don&apos;t have a account?{" "}
-            <Link href="/login" className="text-primary hover:underline">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-primary hover:underline">
               Sign up
             </Link>
           </p>
@@ -154,7 +137,7 @@ export function Login() {
         </CardContent>
         <CardFooter>
           <p className="px-8 text-center text-sm text-muted-foreground">
-            By clicking continue, you agree to our{" "}
+            By clicking Sign in, you agree to our{" "}
             <a
               href="/terms"
               className="underline underline-offset-4 hover:text-primary"
@@ -172,6 +155,32 @@ export function Login() {
           </p>
         </CardFooter>
       </Card>
+      <Button
+        className="fixed bottom-5 left-5 rounded-lg p-4 bg-primary text-primary-foreground shadow-lg hover:bg-primary-hover"
+        onClick={() => router.push("/")}
+      >
+        <HomeIcon className="w-6 h-6" />
+      </Button>
     </div>
+  );
+}
+
+function HomeIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 12L12 3l9 9" />
+      <path d="M9 21V9h6v12" />
+    </svg>
   );
 }
