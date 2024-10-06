@@ -12,20 +12,19 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Import useRouter
-import { SVGProps, useState } from "react"; // Import SVGProps
+import { useRouter } from "next/navigation";
+import { SVGProps, useState } from "react";
 
 export function GenerateCode() {
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
   const [code, setCode] = useState("");
-  const [sessionName, setSessionName] = useState(""); // New state for session name
-  const [sessionNameError, setSessionNameError] = useState(""); // Error state for session name
+  const [sessionName, setSessionName] = useState("");
+  const [sessionNameError, setSessionNameError] = useState("");
   const [showAlert, setShowAlert] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Function to generate a 6-character session code
   function generateSessionCode() {
-    const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Exclude 0,O,I,1
+    const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let result = "";
     for (let i = 0; i < 6; i++) {
       result += characters.charAt(
@@ -36,7 +35,6 @@ export function GenerateCode() {
   }
 
   async function generateCode() {
-    // Validate session name
     if (!sessionName.trim()) {
       setSessionNameError("Session name is required.");
       return;
@@ -47,7 +45,6 @@ export function GenerateCode() {
     let newCode = "";
     let sessionExists = true;
 
-    // Loop until a unique code is generated
     while (sessionExists) {
       newCode = generateSessionCode();
       const docRef = doc(db, "sessions", newCode);
@@ -59,13 +56,11 @@ export function GenerateCode() {
 
     setCode(newCode);
 
-    const expiresAt = Timestamp.fromMillis(
-      Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-    );
+    const expiresAt = Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000);
 
     try {
       await setDoc(doc(db, "sessions", newCode), {
-        sessionName: sessionName.trim(), // Store session name in Firestore
+        sessionName: sessionName.trim(),
         createdAt: serverTimestamp(),
         expiresAt: expiresAt,
       });
@@ -80,7 +75,7 @@ export function GenerateCode() {
       .writeText(code)
       .then(() => {
         setShowAlert(true);
-        setTimeout(() => setShowAlert(false), 3000); // Hide alert after 3 seconds
+        setTimeout(() => setShowAlert(false), 3000);
       })
       .catch((err) => {
         console.error("Failed to copy code: ", err);
@@ -88,7 +83,7 @@ export function GenerateCode() {
   }
 
   function startSession() {
-    router.push("/"); // Redirect to home page
+    router.push("/");
   }
 
   return (
@@ -101,7 +96,6 @@ export function GenerateCode() {
               Share this code with participants to join your karaoke session.
             </p>
           </div>
-          {/* New Input for Session Name */}
           <Input
             value={sessionName}
             onChange={(e) => setSessionName(e.target.value)}

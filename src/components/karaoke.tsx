@@ -18,6 +18,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import debounce from "lodash.debounce";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { JSX, SVGProps, useCallback, useEffect, useState } from "react";
 
@@ -304,6 +305,7 @@ export function Karaoke({ code }: { code: string }) {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
+        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
         Loading session...
       </div>
     );
