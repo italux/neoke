@@ -2,7 +2,8 @@
 
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
-import Link from "next/link"
+import Link from "next/link";
+import Image from "next/image";
 import localFont from "next/font/local";
 import { useRouter, usePathname } from "next/navigation";
 import "./globals.css";
@@ -57,12 +58,12 @@ export default function RootLayout({
       >
         {/* Header */}
         <header className="flex justify-between items-center p-4 bg-background border-b">
-          <div className="flex items-center space-x-4">
-            <img src="logo-512x512.png" alt="NeoKÊ Logo" className="h-6 w-6" />
+            <div className="flex items-center space-x-4">
+            <Image src="/logo-512x512.png" alt="NeoKÊ Logo" width={24} height={24} />
             <Link href="/" className="text-primary">
               <h1 className="text-2xl font-bold text-primary">NeoKÊ</h1>
             </Link>
-          </div>
+            </div>
           <div className="flex items-center space-x-4">
             <p className="text-sm text-muted-foreground hidden sm:block">
               Ready to sing?

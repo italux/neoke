@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { SiYoutube } from "react-icons/si";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export function HomePage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export function HomePage() {
 
       <main className="flex-grow flex flex-col items-center justify-center p-4 text-center">
         <div className="mb-8">
-          <img src="logo-512x512.png" alt="NeoKÊ Logo" className=" mx-auto mb-4 h-16 w-16" />
+          <Image src="/logo-512x512.png" alt="NeoKÊ Logo" className=" mx-auto mb-4 h-16 w-16" />
           <h2 className="text-4xl font-extrabold mb-4">Welcome to NeoKÊ</h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-md">
             Join the fun, manage your song list, and get ready for an
