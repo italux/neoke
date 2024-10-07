@@ -18,7 +18,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
 } from "firebase/auth";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SVGProps, useEffect, useState } from "react";
@@ -28,12 +28,17 @@ export function Login() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.push("/join");
+        router.back();
       }
     });
     return () => unsubscribe();
@@ -46,7 +51,7 @@ export function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/sessions");
+      // No redirect after successful login
     } catch (err) {
       setError("Login failed. Please check your credentials.");
     } finally {
@@ -60,7 +65,7 @@ export function Login() {
 
     try {
       await signInWithPopup(auth, googleProvider);
-      router.push("/sessions");
+      // No redirect after successful login
     } catch (err) {
       setError("Google sign-in failed. Please try again.");
     } finally {
@@ -86,7 +91,7 @@ export function Login() {
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="me@example.com"
                 autoCapitalize="none"
                 autoComplete="email"
                 autoCorrect="off"
@@ -97,13 +102,28 @@ export function Login() {
             </div>
             <div className="grid gap-2 mt-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                disabled={isLoading}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={passwordVisible ? "text" : "password"} // Toggle password type
+                  placeholder="********"
+                  disabled={isLoading}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  variant="ghost"
+                >
+                  {passwordVisible ? (
+                    <Eye className="h-5 w-5" />
+                  ) : (
+                    <EyeOff className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
             </div>
             <Button className="w-full mt-4" type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

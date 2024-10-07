@@ -1,5 +1,8 @@
 "use client";
 
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogOut, LogIn } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -9,6 +12,8 @@ import { useRouter, usePathname } from "next/navigation";
 import "./globals.css";
 import { generateMetadata } from "./metadata";
 import { useEffect, useState } from "react";
+import { auth } from "@/firebase/firebaseConfig";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,6 +38,14 @@ export default function RootLayout({
     description: "",
   });
 
+  type User = {
+    displayName: string;
+    email: string;
+    photoURL: string;
+  };
+
+  const [user, setUser] = useState<User | null>(null);
+
   useEffect(() => {
     const generatedMetadata = generateMetadata(pathname);
     setMetadata({
@@ -40,6 +53,39 @@ export default function RootLayout({
       description: generatedMetadata.description ?? "",
     });
   }, [pathname]);
+
+  useEffect(() => {
+    // Listen to auth state changes to check if user is logged in
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        // Set user details if logged in
+        setUser({
+          displayName: currentUser.displayName || "",
+          email: currentUser.email || "",
+          photoURL: currentUser.photoURL || "",
+        });
+      } else {
+        // Set user to null if logged out
+        setUser(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push(pathname);
+    } catch (err) {
+      console.error("Error signing out:", error);
+      setError(
+        "Oops! Something went wrong while signing out. Please try again."
+      );
+    }
+  };
 
   return (
     <html lang="en">
@@ -60,18 +106,65 @@ export default function RootLayout({
             <Image
               src="/logo-512x512.png"
               alt="NeoKÊ Logo"
-              width={24}
-              height={24}
+              width={32}
+              height={32}
             />
             <Link href="/" className="text-primary">
               <h1 className="text-2xl font-bold text-primary">NeoKÊ</h1>
             </Link>
           </div>
           <div className="flex items-center space-x-4">
-            <p className="text-sm text-muted-foreground hidden sm:block">
+            <span className="text-sm text-muted-foreground">
               Ready to sing?
-            </p>
+            </span>
             <Button onClick={() => router.push("/join")}>Join</Button>
+            {user ? (
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                  >
+                    <Avatar className="h-11 w-11">
+                      <AvatarImage
+                        src={user.photoURL}
+                        alt="User avatar"
+                        style={{ borderRadius: "9999px" }}
+                      />
+                      <AvatarFallback>
+                        {user.displayName
+                          ? user.displayName
+                              .split(" ")
+                              .map((name) => name.charAt(0))
+                              .join("")
+                              .toUpperCase()
+                          : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content
+                    className="w-56 bg-popover text-popover-foreground rounded-md p-1 shadow-md"
+                    sideOffset={10}
+                  >
+                    <DropdownMenu.Separator className="h-px bg-border my-1" />
+                    <DropdownMenu.Item
+                      className="flex items-center p-2 hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+            ) : (
+              <Button variant="outline" onClick={() => router.push("/login")}>
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Button>
+            )}
           </div>
         </header>
         {children}
