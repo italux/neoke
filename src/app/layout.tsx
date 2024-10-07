@@ -38,11 +38,13 @@ export default function RootLayout({
     description: "",
   });
 
-  const [user, setUser] = useState<null | {
+  type User = {
     displayName: string;
     email: string;
     photoURL: string;
-  }>(null);
+  };
+
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const generatedMetadata = generateMetadata(pathname);
@@ -71,9 +73,18 @@ export default function RootLayout({
     return () => unsubscribe();
   }, []);
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push(pathname);
+    try {
+      await signOut(auth);
+      router.push(pathname);
+    } catch (error) {
+      console.error("Error signing out:", error);
+      setError(
+        "Oops! Something went wrong while signing out. Please try again."
+      );
+    }
   };
 
   return (
@@ -120,7 +131,15 @@ export default function RootLayout({
                         alt="User avatar"
                         style={{ borderRadius: "9999px" }}
                       />
-                      <AvatarFallback>U</AvatarFallback>
+                      <AvatarFallback>
+                        {user.displayName
+                          ? user.displayName
+                              .split(" ")
+                              .map((name) => name.charAt(0))
+                              .join("")
+                              .toUpperCase()
+                          : "U"}
+                      </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenu.Trigger>
