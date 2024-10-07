@@ -79,7 +79,7 @@ export default function RootLayout({
     try {
       await signOut(auth);
       router.push(pathname);
-    } catch (error) {
+    } catch (err) {
       console.error("Error signing out:", error);
       setError(
         "Oops! Something went wrong while signing out. Please try again."
