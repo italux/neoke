@@ -46,6 +46,9 @@ export default function RootLayout({
 
   const [user, setUser] = useState<User | null>(null);
 
+  // State to track scroll direction
+  const [scrollDirection, setScrollDirection] = useState("up");
+
   useEffect(() => {
     const generatedMetadata = generateMetadata(pathname);
     setMetadata({
@@ -55,17 +58,14 @@ export default function RootLayout({
   }, [pathname]);
 
   useEffect(() => {
-    // Listen to auth state changes to check if user is logged in
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        // Set user details if logged in
         setUser({
           displayName: currentUser.displayName || "",
           email: currentUser.email || "",
           photoURL: currentUser.photoURL || "",
         });
       } else {
-        // Set user to null if logged out
         setUser(null);
       }
     });
@@ -87,6 +87,27 @@ export default function RootLayout({
     }
   };
 
+  useEffect(() => {
+    let lastScrollY = window.pageYOffset;
+
+    const handleScroll = () => {
+      const currentScrollY = window.pageYOffset;
+      const direction = currentScrollY > lastScrollY ? "down" : "up";
+
+      if (direction !== scrollDirection) {
+        setScrollDirection(direction);
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [scrollDirection]);
+
   return (
     <html lang="en">
       <head>
@@ -101,73 +122,85 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <header className="flex justify-between items-center p-4 bg-background border-b">
-          <div className="flex items-center space-x-4">
-            <Image
-              src="/logo-512x512.png"
-              alt="NeoKÊ Logo"
-              width={32}
-              height={32}
-            />
-            <Link href="/" className="text-primary">
-              <h1 className="text-2xl font-bold text-primary">NeoKÊ</h1>
-            </Link>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">
-              Ready to sing?
-            </span>
-            <Button onClick={() => router.push("/join")}>Join</Button>
-            {user ? (
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="relative h-8 w-8 rounded-full"
-                  >
-                    <Avatar className="h-11 w-11">
-                      <AvatarImage
-                        src={user.photoURL}
-                        alt="User avatar"
-                        style={{ borderRadius: "9999px" }}
-                      />
-                      <AvatarFallback>
-                        {user.displayName
-                          ? user.displayName
-                              .split(" ")
-                              .map((name) => name.charAt(0))
-                              .join("")
-                              .toUpperCase()
-                          : "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    className="w-56 bg-popover text-popover-foreground rounded-md p-1 shadow-md"
-                    sideOffset={10}
-                  >
-                    <DropdownMenu.Separator className="h-px bg-border my-1" />
-                    <DropdownMenu.Item
-                      className="flex items-center p-2 hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer"
-                      onClick={handleLogout}
+        {/* Top navigation bar */}
+        <nav
+          className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
+            scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
+          } bg-background border-b p-4`}
+        >
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <Image
+                src="/logo-512x512.png"
+                alt="NeoKÊ Logo"
+                width={32}
+                height={32}
+              />
+              <Link href="/" className="text-primary">
+                <h1 className="text-2xl font-bold text-primary">NeoKÊ</h1>
+              </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-muted-foreground hidden md:block">
+                Ready to sing?
+              </span>
+              <Button onClick={() => router.push("/join")}>Join</Button>
+              {user ? (
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="relative h-8 w-8 rounded-full"
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Logout</span>
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
-            ) : (
-              <Button variant="outline" onClick={() => router.push("/login")}>
-                <LogIn className="mr-2 h-4 w-4" />
-                Login
-              </Button>
-            )}
+                      <Avatar className="h-11 w-11">
+                        <AvatarImage
+                          src={user.photoURL}
+                          alt="User avatar"
+                          style={{ borderRadius: "9999px" }}
+                        />
+                        <AvatarFallback>
+                          {user.displayName
+                            ? user.displayName
+                                .split(" ")
+                                .map((name) => name.charAt(0))
+                                .join("")
+                                .toUpperCase()
+                            : "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      className="w-56 bg-popover text-popover-foreground rounded-md p-1 shadow-md"
+                      sideOffset={10}
+                    >
+                      <DropdownMenu.Separator className="h-px bg-border my-1" />
+                      <DropdownMenu.Item
+                        className="flex items-center p-2 hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer"
+                        onClick={handleLogout}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Logout</span>
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => router.push("/login")}
+                >
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login
+                </Button>
+              )}
+            </div>
           </div>
-        </header>
-        {children}
+        </nav>
+
+        {/* Main content */}
+        <main className="pt-16">{children}</main>
         <Footer />
       </body>
     </html>
