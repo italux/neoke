@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { db } from "@/firebase/firebaseConfig";
+import { db, auth } from "@/firebase/firebaseConfig";
 import {
   collection,
   getDocs,
@@ -15,12 +15,13 @@ import {
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
-  MouseEventHandler,
-  SVGProps,
-  useCallback,
   useEffect,
   useState,
+  useCallback,
+  MouseEventHandler,
+  SVGProps,
 } from "react";
+import { onAuthStateChanged } from "firebase/auth";
 
 export function SessionList() {
   const [sessions, setSessions] = useState<
@@ -32,6 +33,16 @@ export function SessionList() {
   const router = useRouter();
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.push("/login");
+      } else {
+        fetchSessions();
+      }
+    });
+
+    return () => unsubscribe();
+
     async function fetchSessions() {
       try {
         const sessionsCollection = collection(db, "sessions");
@@ -67,9 +78,7 @@ export function SessionList() {
         setLoading(false);
       }
     }
-
-    fetchSessions();
-  }, []);
+  }, [router]);
 
   const handleGenerateNewCode = useCallback(() => {
     router.push("/generate");
@@ -111,7 +120,9 @@ export function SessionList() {
                       onClick={() => router.push(`/session/${session.id}`)}
                     >
                       <div>
-                        <span className="font-medium">{session.sessionName}</span>
+                        <span className="font-medium">
+                          {session.sessionName}
+                        </span>
                         <div className="text-sm text-muted-foreground">
                           {session.queueCount}{" "}
                           {session.queueCount === 1 ? "person" : "people"} in

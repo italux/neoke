@@ -17,14 +17,16 @@ import { SVGProps, useState } from "react";
 
 export function GenerateCode() {
   const router = useRouter();
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(""); // Initially code is empty
   const [sessionName, setSessionName] = useState("");
   const [sessionNameError, setSessionNameError] = useState("");
   const [showAlert, setShowAlert] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [requiresAuth, setRequiresAuth] = useState(false); // State for checkbox
 
+  // Function to generate a 6-character session code
   function generateSessionCode() {
-    const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Exclude confusing characters
     let result = "";
     for (let i = 0; i < 6; i++) {
       result += characters.charAt(
@@ -35,6 +37,7 @@ export function GenerateCode() {
   }
 
   async function generateCode() {
+    // Validate session name
     if (!sessionName.trim()) {
       setSessionNameError("Session name is required.");
       return;
@@ -45,6 +48,7 @@ export function GenerateCode() {
     let newCode = "";
     let sessionExists = true;
 
+    // Loop until a unique code is generated
     while (sessionExists) {
       newCode = generateSessionCode();
       const docRef = doc(db, "sessions", newCode);
@@ -54,16 +58,17 @@ export function GenerateCode() {
       }
     }
 
-    setCode(newCode);
-
-    const expiresAt = Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000);
+    const expiresAt = Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000); // 24 hours expiration
 
     try {
       await setDoc(doc(db, "sessions", newCode), {
         sessionName: sessionName.trim(),
         createdAt: serverTimestamp(),
         expiresAt: expiresAt,
+        requiresAuth: requiresAuth, // Store the checkbox value in Firestore
       });
+
+      setCode(newCode); // Set the generated code to state after successful Firestore write
       setIsSubmitted(true);
     } catch (err) {
       console.error("Failed to store session in Firestore: ", err);
@@ -75,7 +80,7 @@ export function GenerateCode() {
       .writeText(code)
       .then(() => {
         setShowAlert(true);
-        setTimeout(() => setShowAlert(false), 3000);
+        setTimeout(() => setShowAlert(false), 3000); // Hide alert after 3 seconds
       })
       .catch((err) => {
         console.error("Failed to copy code: ", err);
@@ -83,7 +88,9 @@ export function GenerateCode() {
   }
 
   function startSession() {
-    router.push("/");
+    if (code) {
+      router.push(`/session/${code}`);
+    }
   }
 
   return (
@@ -96,6 +103,8 @@ export function GenerateCode() {
               Share this code with participants to join your karaoke session.
             </p>
           </div>
+
+          {/* Input for Session Name */}
           <Input
             value={sessionName}
             onChange={(e) => setSessionName(e.target.value)}
@@ -105,34 +114,55 @@ export function GenerateCode() {
           {sessionNameError && (
             <div className="text-red-500 text-sm">{sessionNameError}</div>
           )}
-          <div className="grid grid-cols-6 gap-2">
-            {Array.from({ length: 6 }, (_, index) => (
-              <Input
-                key={index}
-                type="text"
-                value={code[index] || ""}
-                readOnly
-                className="text-center text-2xl tracking-widest"
-              />
-            ))}
+
+          {/* Checkbox for requiring authentication */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="requiresAuth"
+              checked={requiresAuth}
+              onChange={(e) => setRequiresAuth(e.target.checked)}
+            />
+            <label htmlFor="requiresAuth">Require authentication to join</label>
           </div>
+
+          {/* Only show the generated code after the button is clicked */}
+          {isSubmitted && (
+            <div className="grid grid-cols-6 gap-2">
+              {Array.from({ length: 6 }, (_, index) => (
+                <Input
+                  key={index}
+                  type="text"
+                  value={code[index] || ""}
+                  readOnly
+                  className="text-center text-2xl tracking-widest"
+                />
+              ))}
+            </div>
+          )}
+
           <div className="flex space-x-2">
             <Button
               onClick={isSubmitted ? startSession : generateCode}
               className="flex-grow"
+              disabled={!sessionName}
             >
               {isSubmitted ? "Start session" : "Generate a session code"}
             </Button>
-            <Button onClick={copyToClipboard} className="flex-shrink-0">
-              <CopyIcon />
-            </Button>
+            {isSubmitted && (
+              <Button onClick={copyToClipboard} className="flex-shrink-0">
+                <CopyIcon />
+              </Button>
+            )}
           </div>
+
           {showAlert && (
             <Alert>
               <AlertTitle>Success</AlertTitle>
               <AlertDescription>Code copied to clipboard!</AlertDescription>
             </Alert>
           )}
+
           <div className="text-center mt-4">
             <Link href="/sessions" className="text-blue-500 hover:underline">
               Active sessions
@@ -140,6 +170,7 @@ export function GenerateCode() {
           </div>
         </div>
       </div>
+
       <Button
         className="fixed bottom-5 left-5 rounded-lg p-4 bg-primary text-primary-foreground shadow-lg hover:bg-primary-hover"
         onClick={() => router.push("/")}

@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { db } from "@/firebase/firebaseConfig";
+import { auth, db } from "@/firebase/firebaseConfig";
 import axios from "axios";
+import { onAuthStateChanged } from "firebase/auth";
 import {
   addDoc,
   collection,
@@ -20,7 +21,7 @@ import {
 import debounce from "lodash.debounce";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { JSX, SVGProps, useCallback, useEffect, useState } from "react";
+import { SVGProps, useCallback, useEffect, useState } from "react";
 
 const youtubeUrlRegex =
   /^(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|shorts\/)?([a-zA-Z0-9_-]{11})(?:\S+)?$/;
@@ -54,6 +55,7 @@ export function Karaoke({ code }: { code: string }) {
   const [loading, setLoading] = useState(true);
   const [error] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Track user authentication status
 
   const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
   const DEBOUNCE_TIME_MS = 300;
@@ -115,18 +117,28 @@ export function Karaoke({ code }: { code: string }) {
     []
   );
 
-  // Verify that the session code exists
   useEffect(() => {
-    if (!code) {
-      router.push("/enter-code");
-      return;
-    }
-
     const sessionRef = doc(db, "sessions", code);
+
+    // Check the session and whether it requires authentication
     getDoc(sessionRef)
       .then((docSnap) => {
         if (!docSnap.exists()) {
           router.push("/enter-code");
+        } else {
+          const sessionData = docSnap.data();
+          if (sessionData?.requiresAuth) {
+            // If session requires authentication, check user's auth state
+            onAuthStateChanged(auth, (user) => {
+              if (user) {
+                setIsAuthenticated(true); // User is logged in
+              } else {
+                router.push("/login"); // Redirect to login if not authenticated
+              }
+            });
+          } else {
+            setIsAuthenticated(true); // No authentication required
+          }
         }
       })
       .catch((error) => {
@@ -135,9 +147,8 @@ export function Karaoke({ code }: { code: string }) {
       });
   }, [code, router]);
 
-  // Fetch queue and current video data from Firestore
   useEffect(() => {
-    if (!code) return;
+    if (!code || !isAuthenticated) return;
 
     console.log("Setting up Firestore listeners for session:", code);
 
@@ -189,7 +200,7 @@ export function Karaoke({ code }: { code: string }) {
       unsubscribeQueue();
       unsubscribeCurrentVideo();
     };
-  }, [code]);
+  }, [code, isAuthenticated]);
 
   const handleAddToQueue = async () => {
     if (!newName) {
