@@ -92,12 +92,12 @@ export default function RootLayout({
 
     const handleScroll = () => {
       const currentScrollY = window.pageYOffset;
+      const direction = currentScrollY > lastScrollY ? "down" : "up";
 
-      if (currentScrollY > lastScrollY) {
-        setScrollDirection("down");
-      } else {
-        setScrollDirection("up");
+      if (direction !== scrollDirection) {
+        setScrollDirection(direction);
       }
+
       lastScrollY = currentScrollY;
     };
 
@@ -106,7 +106,7 @@ export default function RootLayout({
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [scrollDirection]);
 
   return (
     <html lang="en">
