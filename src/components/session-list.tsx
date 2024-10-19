@@ -3,7 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { db, auth } from "@/firebase/firebaseConfig";
+import { auth, db } from "@/firebase/firebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   getDocs,
@@ -14,14 +15,7 @@ import {
 } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  useEffect,
-  useState,
-  useCallback,
-  MouseEventHandler,
-  SVGProps,
-} from "react";
-import { onAuthStateChanged } from "firebase/auth";
+import { SVGProps, useCallback, useEffect, useState } from "react";
 
 export function SessionList() {
   const [sessions, setSessions] = useState<
@@ -31,6 +25,42 @@ export function SessionList() {
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
+
+  async function fetchSessions() {
+    try {
+      const sessionsCollection = collection(db, "sessions");
+      const now = Timestamp.now();
+      const sessionsQuery = query(
+        sessionsCollection,
+        where("expiresAt", ">", now),
+        orderBy("createdAt", "desc")
+      );
+      const sessionSnapshot = await getDocs(sessionsQuery);
+
+      const sessionList = await Promise.all(
+        sessionSnapshot.docs.map(async (doc) => {
+          const sessionName = doc.data().sessionName || "Unnamed Session";
+
+          const queueCollection = collection(db, "sessions", doc.id, "queue");
+          const queueSnapshot = await getDocs(queueCollection);
+          const queueCount = queueSnapshot.size;
+
+          return {
+            id: doc.id,
+            sessionName,
+            queueCount,
+          };
+        })
+      );
+
+      setSessions(sessionList);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching sessions: ", err);
+      setError("Failed to load sessions. Please try again later.");
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -42,47 +72,14 @@ export function SessionList() {
     });
 
     return () => unsubscribe();
-
-    async function fetchSessions() {
-      try {
-        const sessionsCollection = collection(db, "sessions");
-        const now = Timestamp.now();
-        const sessionsQuery = query(
-          sessionsCollection,
-          where("expiresAt", ">", now),
-          orderBy("createdAt", "desc")
-        );
-        const sessionSnapshot = await getDocs(sessionsQuery);
-
-        const sessionList = await Promise.all(
-          sessionSnapshot.docs.map(async (doc) => {
-            const sessionName = doc.data().sessionName || "Unnamed Session";
-
-            const queueCollection = collection(db, "sessions", doc.id, "queue");
-            const queueSnapshot = await getDocs(queueCollection);
-            const queueCount = queueSnapshot.size;
-
-            return {
-              id: doc.id,
-              sessionName,
-              queueCount,
-            };
-          })
-        );
-
-        setSessions(sessionList);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching sessions: ", err);
-        setError("Failed to load sessions. Please try again later.");
-        setLoading(false);
-      }
-    }
   }, []);
 
-  const handleGenerateNewCode = useCallback(() => {
-    router.push("/generate");
-  }, [router]);
+  const handleGenerateNewCode = useCallback(
+    () => {
+      router.push("/generate");
+    },
+    [router]
+  );
 
   if (loading) {
     return (
@@ -138,12 +135,7 @@ export function SessionList() {
               </ul>
             )}
             <div className="text-center mt-4 flex-grow">
-              <Button
-                className="flex-grow"
-                onClick={
-                  handleGenerateNewCode as unknown as MouseEventHandler<HTMLButtonElement>
-                }
-              >
+              <Button className="flex-grow" onClick={handleGenerateNewCode}>
                 Create a new session code
               </Button>
             </div>

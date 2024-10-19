@@ -13,7 +13,7 @@ import {
 } from "firebase/firestore";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { SVGProps, useState } from "react";
+import { SVGProps, useEffect, useRef, useState } from "react";
 
 export function GenerateCode() {
   const router = useRouter();
@@ -26,9 +26,9 @@ export function GenerateCode() {
 
   const generateSessionCode = () => {
     // This is a placeholder for the actual code generation logic
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-    return code
-  }
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return code;
+  };
 
   async function generateCode() {
     // Validate session name
@@ -74,12 +74,23 @@ export function GenerateCode() {
       .writeText(code)
       .then(() => {
         setShowAlert(true);
-        setTimeout(() => setShowAlert(false), 3000); // Hide alert after 3 seconds
+        // setTimeout(() => setShowAlert(false), 3000); // Hide alert after 3 seconds
+        timeoutRef.current = setTimeout(() => setShowAlert(false), 3000);
       })
       .catch((err) => {
         console.error("Failed to copy code: ", err);
       });
   }
+
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   function startSession() {
     if (code) {
@@ -139,7 +150,7 @@ export function GenerateCode() {
             <Button
               onClick={isSubmitted ? startSession : generateCode}
               className="flex-grow"
-              disabled={!sessionName}
+              disabled={!sessionName && !isSubmitted}
             >
               {isSubmitted ? "Start session" : "Generate a session code"}
             </Button>
