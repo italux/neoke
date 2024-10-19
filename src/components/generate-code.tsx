@@ -24,16 +24,10 @@ export function GenerateCode() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [requiresAuth, setRequiresAuth] = useState(false); // State for checkbox
 
-  // Function to generate a 6-character session code
-  function generateSessionCode() {
-    const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Exclude confusing characters
-    let result = "";
-    for (let i = 0; i < 6; i++) {
-      result += characters.charAt(
-        Math.floor(Math.random() * characters.length)
-      );
-    }
-    return result;
+  const generateSessionCode = () => {
+    // This is a placeholder for the actual code generation logic
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+    return code
   }
 
   async function generateCode() {
