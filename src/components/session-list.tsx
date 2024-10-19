@@ -78,7 +78,7 @@ export function SessionList() {
         setLoading(false);
       }
     }
-  }, [router]);
+  }, []);
 
   const handleGenerateNewCode = useCallback(() => {
     router.push("/generate");
