@@ -3,7 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { db } from "@/firebase/firebaseConfig";
+import { auth, db } from "@/firebase/firebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   getDocs,
@@ -14,13 +15,7 @@ import {
 } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  MouseEventHandler,
-  SVGProps,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { SVGProps, useCallback, useEffect, useState } from "react";
 
 export function SessionList() {
   const [sessions, setSessions] = useState<
@@ -31,49 +26,60 @@ export function SessionList() {
 
   const router = useRouter();
 
-  useEffect(() => {
-    async function fetchSessions() {
-      try {
-        const sessionsCollection = collection(db, "sessions");
-        const now = Timestamp.now();
-        const sessionsQuery = query(
-          sessionsCollection,
-          where("expiresAt", ">", now),
-          orderBy("createdAt", "desc")
-        );
-        const sessionSnapshot = await getDocs(sessionsQuery);
+  async function fetchSessions() {
+    try {
+      const sessionsCollection = collection(db, "sessions");
+      const now = Timestamp.now();
+      const sessionsQuery = query(
+        sessionsCollection,
+        where("expiresAt", ">", now),
+        orderBy("createdAt", "desc")
+      );
+      const sessionSnapshot = await getDocs(sessionsQuery);
 
-        const sessionList = await Promise.all(
-          sessionSnapshot.docs.map(async (doc) => {
-            const sessionName = doc.data().sessionName || "Unnamed Session";
+      const sessionList = await Promise.all(
+        sessionSnapshot.docs.map(async (doc) => {
+          const sessionName = doc.data().sessionName || "Unnamed Session";
 
-            const queueCollection = collection(db, "sessions", doc.id, "queue");
-            const queueSnapshot = await getDocs(queueCollection);
-            const queueCount = queueSnapshot.size;
+          const queueCollection = collection(db, "sessions", doc.id, "queue");
+          const queueSnapshot = await getDocs(queueCollection);
+          const queueCount = queueSnapshot.size;
 
-            return {
-              id: doc.id,
-              sessionName,
-              queueCount,
-            };
-          })
-        );
+          return {
+            id: doc.id,
+            sessionName,
+            queueCount,
+          };
+        })
+      );
 
-        setSessions(sessionList);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching sessions: ", err);
-        setError("Failed to load sessions. Please try again later.");
-        setLoading(false);
-      }
+      setSessions(sessionList);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching sessions: ", err);
+      setError("Failed to load sessions. Please try again later.");
+      setLoading(false);
     }
+  }
 
-    fetchSessions();
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.push("/login");
+      } else {
+        fetchSessions();
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const handleGenerateNewCode = useCallback(() => {
-    router.push("/generate");
-  }, [router]);
+  const handleGenerateNewCode = useCallback(
+    () => {
+      router.push("/generate");
+    },
+    [router]
+  );
 
   if (loading) {
     return (
@@ -111,7 +117,9 @@ export function SessionList() {
                       onClick={() => router.push(`/session/${session.id}`)}
                     >
                       <div>
-                        <span className="font-medium">{session.sessionName}</span>
+                        <span className="font-medium">
+                          {session.sessionName}
+                        </span>
                         <div className="text-sm text-muted-foreground">
                           {session.queueCount}{" "}
                           {session.queueCount === 1 ? "person" : "people"} in
@@ -127,12 +135,7 @@ export function SessionList() {
               </ul>
             )}
             <div className="text-center mt-4 flex-grow">
-              <Button
-                className="flex-grow"
-                onClick={
-                  handleGenerateNewCode as unknown as MouseEventHandler<HTMLButtonElement>
-                }
-              >
+              <Button className="flex-grow" onClick={handleGenerateNewCode}>
                 Create a new session code
               </Button>
             </div>
