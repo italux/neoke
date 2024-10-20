@@ -47,6 +47,11 @@ export function GenerateCode() {
       newCode = generateSessionCode();
       const docRef = doc(db, "sessions", newCode);
       const docSnap = await getDoc(docRef);
+      await setDoc(docRef, {
+        createdAt: serverTimestamp(),
+        sessionName,
+        queueCount: 0,
+      });
       if (!docSnap.exists()) {
         sessionExists = false;
       }
