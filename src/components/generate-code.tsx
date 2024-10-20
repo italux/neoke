@@ -62,6 +62,14 @@ export function GenerateCode() {
         requiresAuth: requiresAuth, // Store the checkbox value in Firestore
       });
 
+      const docRef = doc(db, "sessions", newCode);
+
+      await setDoc(docRef, {
+        createdAt: serverTimestamp(),
+        sessionName,
+        queueCount: 0,
+      });
+
       setCode(newCode); // Set the generated code to state after successful Firestore write
       setIsSubmitted(true);
     } catch (err) {

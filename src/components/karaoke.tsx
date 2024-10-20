@@ -11,6 +11,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  increment,
   onSnapshot,
   orderBy,
   query,
@@ -222,9 +223,13 @@ export function Karaoke({ code }: { code: string }) {
         videoUrl: newVideoUrl,
         addedAt: serverTimestamp(), // Add timestamp here
       };
+      const sessionRef = doc(db, "sessions", code);
       console.log("Attempting to add to Firestore:", newQueueItem);
       try {
         await addDoc(collection(db, "sessions", code, "queue"), newQueueItem);
+        await updateDoc(sessionRef, {
+          queueCount: increment(1),
+        });
         console.log("Successfully added to Firestore");
         setNewName("");
         setNewSong("");
@@ -236,8 +241,15 @@ export function Karaoke({ code }: { code: string }) {
   };
 
   const handleDeleteFromQueue = async (id: string) => {
+    const sessionRef = doc(db, "sessions", code);
     try {
       await deleteDoc(doc(db, "sessions", code, "queue", id));
+      const sessionSnap = await getDoc(sessionRef);
+      if (sessionSnap.exists() && sessionSnap.data().queueCount) {
+        await updateDoc(sessionRef, {
+          queueCount: increment(-1),
+        });
+      }
     } catch (error) {
       console.error("Error deleting document: ", error);
     }

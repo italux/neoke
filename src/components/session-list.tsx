@@ -11,7 +11,7 @@ import {
   orderBy,
   query,
   Timestamp,
-  where,
+  where
 } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -37,21 +37,17 @@ export function SessionList() {
       );
       const sessionSnapshot = await getDocs(sessionsQuery);
 
-      const sessionList = await Promise.all(
-        sessionSnapshot.docs.map(async (doc) => {
-          const sessionName = doc.data().sessionName || "Unnamed Session";
+      const sessionList = sessionSnapshot.docs.map((doc) => {
+        const sessionData = doc.data();
+        const sessionName = sessionData.sessionName || "Unnamed Session";
+        const queueCount = sessionData.queueCount || "Some";
 
-          const queueCollection = collection(db, "sessions", doc.id, "queue");
-          const queueSnapshot = await getDocs(queueCollection);
-          const queueCount = queueSnapshot.size;
-
-          return {
-            id: doc.id,
-            sessionName,
-            queueCount,
-          };
-        })
-      );
+        return {
+          id: doc.id,
+          sessionName,
+          queueCount,
+        };
+      });
 
       setSessions(sessionList);
       setLoading(false);
@@ -74,12 +70,9 @@ export function SessionList() {
     return () => unsubscribe();
   }, []);
 
-  const handleGenerateNewCode = useCallback(
-    () => {
-      router.push("/generate");
-    },
-    [router]
-  );
+  const handleGenerateNewCode = useCallback(() => {
+    router.push("/generate");
+  }, [router]);
 
   if (loading) {
     return (
