@@ -47,11 +47,6 @@ export function GenerateCode() {
       newCode = generateSessionCode();
       const docRef = doc(db, "sessions", newCode);
       const docSnap = await getDoc(docRef);
-      await setDoc(docRef, {
-        createdAt: serverTimestamp(),
-        sessionName,
-        queueCount: 0,
-      });
       if (!docSnap.exists()) {
         sessionExists = false;
       }
@@ -65,6 +60,14 @@ export function GenerateCode() {
         createdAt: serverTimestamp(),
         expiresAt: expiresAt,
         requiresAuth: requiresAuth, // Store the checkbox value in Firestore
+      });
+
+      const docRef = doc(db, "sessions", newCode);
+
+      await setDoc(docRef, {
+        createdAt: serverTimestamp(),
+        sessionName,
+        queueCount: 0,
       });
 
       setCode(newCode); // Set the generated code to state after successful Firestore write
