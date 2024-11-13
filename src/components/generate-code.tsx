@@ -59,18 +59,11 @@ export function GenerateCode() {
         sessionName: sessionName.trim(),
         createdAt: serverTimestamp(),
         expiresAt: expiresAt,
-        requiresAuth: requiresAuth, // Store the checkbox value in Firestore
-      });
-
-      const docRef = doc(db, "sessions", newCode);
-
-      await setDoc(docRef, {
-        createdAt: serverTimestamp(),
-        sessionName,
+        requiresAuth: requiresAuth,
         queueCount: 0,
       });
 
-      setCode(newCode); // Set the generated code to state after successful Firestore write
+      setCode(newCode);
       setIsSubmitted(true);
     } catch (err) {
       console.error("Failed to store session in Firestore: ", err);
