@@ -262,8 +262,8 @@ export function Karaoke({ code }: { code: string }) {
     song: string;
   }) => {
     try {
-      // Remove the item from the queue
-      await deleteDoc(doc(db, "sessions", code, "queue", item.id));
+      // Remove the item from the queue using handleDeleteFromQueue
+      await handleDeleteFromQueue(item.id);
       // Set the current video
       await setDoc(doc(db, "sessions", code, "currentVideo", "current"), {
         ...item,
